@@ -52,6 +52,10 @@
     "add": "أضف",
     "soldOut": "نفد",
     "new": "جديد",
+    "specialOffer": {
+      "top": "عرض",
+      "bottom": "خاص"
+    },
     "from": "من {price}",
     "viewCart": "عرض الطلب",
     "itemCount": "{count} أصناف",

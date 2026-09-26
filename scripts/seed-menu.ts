@@ -6,13 +6,18 @@
  * Every price below is verified against the owner's printed-menu photographs
  * (see docs/menu-sources.md). Rows are created if missing and NEVER
  * overwritten, so re-running the seed cannot clobber edits staff made in the
- * admin. Names are seeded in English only; rw/ar fall back to English until
- * staff add translations — nothing is machine-invented.
+ * admin. Kinyarwanda and Arabic names ship with the seed (rw pending the
+ * owner's copy review); a missing translation row is added, an existing one
+ * — in any locale — is never touched.
  */
 import "dotenv/config"
 
 import { db } from "../src/lib/db"
 import { ITEM_PHOTOS, MENU_ORDER } from "./process-item-photos"
+
+type Text = { name: string; description?: string }
+/** Non-default locales. English lives in the row itself. */
+type Localized = { rw: Text; ar: Text }
 
 type Seed = {
   slug: string
@@ -22,34 +27,82 @@ type Seed = {
   price: number
   isNew?: boolean
   modifiers?: string[]
-}
+} & Localized
 
-const CATEGORIES = [
-  { slug: "burgers", name: "Burgers" },
-  { slug: "combos", name: "Combos" },
-  { slug: "meals", name: "Meals" },
-  { slug: "extras", name: "Extras" },
-  { slug: "drinks", name: "Drinks" },
+const CATEGORIES: ({ slug: string; name: string } & Localized)[] = [
+  { slug: "burgers", name: "Burgers", rw: { name: "Burger" }, ar: { name: "برغر" } },
+  { slug: "combos", name: "Combos", rw: { name: "Combo" }, ar: { name: "كومبو" } },
+  { slug: "meals", name: "Meals", rw: { name: "Amafunguro" }, ar: { name: "وجبات" } },
+  { slug: "extras", name: "Extras", rw: { name: "Inyongera" }, ar: { name: "إضافات" } },
+  { slug: "drinks", name: "Drinks", rw: { name: "Ibinyobwa" }, ar: { name: "مشروبات" } },
 ]
 
 // Source: IMG_2910 (burger menu) and IMG_2911 (meals menu).
 const ITEMS: Seed[] = [
-  { slug: "classic-beef-burger", category: "burgers", name: "Classic Beef Burger", description: "Single beef patty.", price: 3000, modifiers: ["extras"] },
-  { slug: "double-beef-burger", category: "burgers", name: "Double Beef Burger", description: "Two beef patties.", price: 4000, modifiers: ["extras"] },
-  { slug: "classic-chicken-burger", category: "burgers", name: "Classic Chicken Burger", description: "Single chicken fillet.", price: 3500, modifiers: ["extras"] },
-  { slug: "double-chicken-burger", category: "burgers", name: "Double Chicken Burger", description: "Two chicken fillets.", price: 4500, modifiers: ["extras"] },
-  { slug: "special-charles-burger", category: "burgers", name: "Special Charles Burger", description: "Double beef, cheese & sauce.", price: 5500, isNew: true, modifiers: ["extras"] },
-  { slug: "classic-beef-burger-fries", category: "combos", name: "Classic Beef Burger + Fries", description: "Classic Beef Burger with fries.", price: 5000, modifiers: ["extras"] },
-  { slug: "double-beef-burger-fries", category: "combos", name: "Double Beef Burger + Fries", description: "Double Beef Burger with fries.", price: 5500, modifiers: ["extras"] },
-  { slug: "classic-chicken-burger-fries", category: "combos", name: "Classic Chicken Burger + Fries", description: "Classic Chicken Burger with fries.", price: 5000, modifiers: ["extras"] },
-  { slug: "double-chicken-burger-fries", category: "combos", name: "Double Chicken Burger + Fries", description: "Double Chicken Burger with fries.", price: 6000, modifiers: ["extras"] },
-  { slug: "beef-pilau", category: "meals", name: "Beef Pilau", price: 4000 },
-  { slug: "chicken-and-fries", category: "meals", name: "Chicken & Fries", price: 5000 },
-  { slug: "chicken-pilau", category: "meals", name: "Chicken Pilau", price: 5000 },
-  { slug: "cheese-extra", category: "extras", name: "Cheese Extra", price: 500 },
-  { slug: "sauce-extra", category: "extras", name: "Sauce Extra", price: 500 },
-  { slug: "fries-extra", category: "extras", name: "Fries Extra", price: 2000 },
-  { slug: "soft-drink", category: "drinks", name: "Fanta / Cola / Sprite", description: "Choose your drink.", price: 1200, modifiers: ["drink-choice"] },
+  { slug: "classic-beef-burger", category: "burgers", name: "Classic Beef Burger", description: "Single beef patty.", price: 3000, modifiers: ["extras"],
+    rw: { name: "Burger y'inka isanzwe", description: "Inyama imwe y'inka." },
+    ar: { name: "برغر لحم كلاسيك", description: "قطعة لحم واحدة." },
+  },
+  { slug: "double-beef-burger", category: "burgers", name: "Double Beef Burger", description: "Two beef patties.", price: 4000, modifiers: ["extras"],
+    rw: { name: "Burger y'inka ikubye kabiri", description: "Inyama ebyiri z'inka." },
+    ar: { name: "برغر لحم دبل", description: "قطعتا لحم." },
+  },
+  { slug: "classic-chicken-burger", category: "burgers", name: "Classic Chicken Burger", description: "Single chicken fillet.", price: 3500, modifiers: ["extras"],
+    rw: { name: "Burger y'inkoko isanzwe", description: "Agace kamwe k'inkoko." },
+    ar: { name: "برغر دجاج كلاسيك", description: "قطعة فيليه دجاج واحدة." },
+  },
+  { slug: "double-chicken-burger", category: "burgers", name: "Double Chicken Burger", description: "Two chicken fillets.", price: 4500, modifiers: ["extras"],
+    rw: { name: "Burger y'inkoko ikubye kabiri", description: "Uduce tubiri tw'inkoko." },
+    ar: { name: "برغر دجاج دبل", description: "قطعتا فيليه دجاج." },
+  },
+  { slug: "special-charles-burger", category: "burgers", name: "Special Charles Burger", description: "Double beef, cheese & sauce.", price: 5500, isNew: true, modifiers: ["extras"],
+    rw: { name: "Burger idasanzwe ya Charles", description: "Inyama ebyiri z'inka, foromaje n'isosi." },
+    ar: { name: "برغر تشارلز الخاص", description: "لحم دبل مع جبن وصوص." },
+  },
+  { slug: "classic-beef-burger-fries", category: "combos", name: "Classic Beef Burger + Fries", description: "Classic Beef Burger with fries.", price: 5000, modifiers: ["extras"],
+    rw: { name: "Burger y'inka isanzwe + ifiriti", description: "Burger y'inka isanzwe n'ifiriti." },
+    ar: { name: "برغر لحم كلاسيك + بطاطس", description: "برغر لحم كلاسيك مع بطاطس مقلية." },
+  },
+  { slug: "double-beef-burger-fries", category: "combos", name: "Double Beef Burger + Fries", description: "Double Beef Burger with fries.", price: 5500, modifiers: ["extras"],
+    rw: { name: "Burger y'inka ikubye kabiri + ifiriti", description: "Burger y'inka ikubye kabiri n'ifiriti." },
+    ar: { name: "برغر لحم دبل + بطاطس", description: "برغر لحم دبل مع بطاطس مقلية." },
+  },
+  { slug: "classic-chicken-burger-fries", category: "combos", name: "Classic Chicken Burger + Fries", description: "Classic Chicken Burger with fries.", price: 5000, modifiers: ["extras"],
+    rw: { name: "Burger y'inkoko isanzwe + ifiriti", description: "Burger y'inkoko isanzwe n'ifiriti." },
+    ar: { name: "برغر دجاج كلاسيك + بطاطس", description: "برغر دجاج كلاسيك مع بطاطس مقلية." },
+  },
+  { slug: "double-chicken-burger-fries", category: "combos", name: "Double Chicken Burger + Fries", description: "Double Chicken Burger with fries.", price: 6000, modifiers: ["extras"],
+    rw: { name: "Burger y'inkoko ikubye kabiri + ifiriti", description: "Burger y'inkoko ikubye kabiri n'ifiriti." },
+    ar: { name: "برغر دجاج دبل + بطاطس", description: "برغر دجاج دبل مع بطاطس مقلية." },
+  },
+  { slug: "beef-pilau", category: "meals", name: "Beef Pilau", price: 4000,
+    rw: { name: "Pilawo y'inka" },
+    ar: { name: "بيلاو باللحم" },
+  },
+  { slug: "chicken-and-fries", category: "meals", name: "Chicken & Fries", price: 5000,
+    rw: { name: "Inkoko n'ifiriti" },
+    ar: { name: "دجاج مع بطاطس" },
+  },
+  { slug: "chicken-pilau", category: "meals", name: "Chicken Pilau", price: 5000,
+    rw: { name: "Pilawo y'inkoko" },
+    ar: { name: "بيلاو بالدجاج" },
+  },
+  { slug: "cheese-extra", category: "extras", name: "Cheese Extra", price: 500,
+    rw: { name: "Foromaje y'inyongera" },
+    ar: { name: "جبن إضافي" },
+  },
+  { slug: "sauce-extra", category: "extras", name: "Sauce Extra", price: 500,
+    rw: { name: "Isosi y'inyongera" },
+    ar: { name: "صوص إضافي" },
+  },
+  { slug: "fries-extra", category: "extras", name: "Fries Extra", price: 2000,
+    rw: { name: "Ifiriti y'inyongera" },
+    ar: { name: "بطاطس إضافية" },
+  },
+  { slug: "soft-drink", category: "drinks", name: "Fanta / Cola / Sprite", description: "Choose your drink.", price: 1200, modifiers: ["drink-choice"],
+    rw: { name: "Fanta / Cola / Sprite", description: "Hitamo icyo kunywa." },
+    ar: { name: "فانتا / كولا / سبرايت", description: "اختر مشروبك." },
+  },
 ]
 
 // The menu's own Extras, offered as add-ons, plus the printed drink choice.
@@ -57,26 +110,47 @@ const MODIFIER_GROUPS = [
   {
     slug: "extras",
     name: "Extras",
+    rw: { name: "Inyongera" },
+    ar: { name: "الإضافات" },
     minSelect: 0,
     maxSelect: 3,
     options: [
-      { slug: "extras-cheese", name: "Cheese", price: 500 },
-      { slug: "extras-sauce", name: "Sauce", price: 500 },
-      { slug: "extras-fries", name: "Fries", price: 2000 },
+      { slug: "extras-cheese", name: "Cheese", price: 500, rw: { name: "Foromaje" }, ar: { name: "جبن" } },
+      { slug: "extras-sauce", name: "Sauce", price: 500, rw: { name: "Isosi" }, ar: { name: "صوص" } },
+      { slug: "extras-fries", name: "Fries", price: 2000, rw: { name: "Ifiriti" }, ar: { name: "بطاطس" } },
     ],
   },
   {
     slug: "drink-choice",
     name: "Drink",
+    rw: { name: "Icyo kunywa" },
+    ar: { name: "المشروب" },
     minSelect: 1,
     maxSelect: 1,
     options: [
-      { slug: "drink-fanta", name: "Fanta", price: 0 },
-      { slug: "drink-cola", name: "Cola", price: 0 },
-      { slug: "drink-sprite", name: "Sprite", price: 0 },
+      { slug: "drink-fanta", name: "Fanta", price: 0, rw: { name: "Fanta" }, ar: { name: "فانتا" } },
+      { slug: "drink-cola", name: "Cola", price: 0, rw: { name: "Cola" }, ar: { name: "كولا" } },
+      { slug: "drink-sprite", name: "Sprite", price: 0, rw: { name: "Sprite" }, ar: { name: "سبرايت" } },
     ],
   },
 ]
+
+const LOCALES = ["rw", "ar"] as const
+
+/**
+ * Create-only per (row, locale): fills a missing rw/ar row on a database
+ * seeded before the translations existed, and leaves any row staff already
+ * wrote untouched.
+ */
+async function addMissingTranslations(
+  existing: { locale: string }[],
+  texts: Localized,
+  create: (locale: (typeof LOCALES)[number], text: Text) => Promise<unknown>
+) {
+  for (const locale of LOCALES) {
+    if (!existing.some((t) => t.locale === locale)) await create(locale, texts[locale])
+  }
+}
 
 async function main() {
   await db.restaurant.upsert({
@@ -105,7 +179,11 @@ async function main() {
       where: { slug: c.slug },
       update: {},
       create: { slug: c.slug, sortOrder: index * 10, translations: { create: { locale: "en", name: c.name } } },
+      include: { translations: { select: { locale: true } } },
     })
+    await addMissingTranslations(row.translations, c, (locale, t) =>
+      db.menuCategoryTranslation.create({ data: { categoryId: row.id, locale, name: t.name } })
+    )
     categoryIds.set(c.slug, row.id)
   }
 
@@ -121,10 +199,14 @@ async function main() {
         sortOrder: index * 10,
         translations: { create: { locale: "en", name: g.name } },
       },
+      include: { translations: { select: { locale: true } } },
     })
+    await addMissingTranslations(row.translations, g, (locale, t) =>
+      db.modifierGroupTranslation.create({ data: { groupId: row.id, locale, name: t.name } })
+    )
     groupIds.set(g.slug, row.id)
     for (const [i, o] of g.options.entries()) {
-      await db.modifierOption.upsert({
+      const option = await db.modifierOption.upsert({
         where: { slug: o.slug },
         update: {},
         create: {
@@ -134,7 +216,11 @@ async function main() {
           sortOrder: i * 10,
           translations: { create: { locale: "en", name: o.name } },
         },
+        include: { translations: { select: { locale: true } } },
       })
+      await addMissingTranslations(option.translations, o, (locale, t) =>
+        db.modifierOptionTranslation.create({ data: { optionId: option.id, locale, name: t.name } })
+      )
     }
   }
 
@@ -156,7 +242,13 @@ async function main() {
           create: { locale: "en", name: item.name, description: item.description ?? null },
         },
       },
+      include: { translations: { select: { locale: true } } },
     })
+    await addMissingTranslations(row.translations, item, (locale, t) =>
+      db.menuItemTranslation.create({
+        data: { itemId: row.id, locale, name: t.name, description: t.description ?? null },
+      })
+    )
     for (const [i, groupSlug] of (item.modifiers ?? []).entries()) {
       const groupId = groupIds.get(groupSlug)!
       await db.menuItemModifierGroup.upsert({

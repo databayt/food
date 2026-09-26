@@ -52,6 +52,10 @@
     "add": "Ongeramo",
     "soldOut": "Byashize",
     "new": "Gishya",
+    "specialOffer": {
+      "top": "Igiciro",
+      "bottom": "Cyihariye"
+    },
     "from": "Guhera kuri {price}",
     "viewCart": "Reba komande",
     "itemCount": "Ibintu {count}",

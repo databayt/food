@@ -8,6 +8,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { cn } from "@/lib/utils";
 
 import { ItemSheet } from "./item-sheet";
+import { SpecialOfferBadge } from "./special-offer-badge";
 import type { MenuItemView, MenuView } from "./types";
 
 /**
@@ -79,10 +80,8 @@ export function MenuBoard({
   );
 }
 
-/** Decorative corner badges from the menu design (Figma node 1355:312). */
-const ITEM_BADGES: Record<string, string> = {
-  "special-charles-burger": "/items/special-offer.svg",
-};
+/** Items that wear the "Special offer" seal (Figma node 1355:312). */
+const SPECIAL_OFFER_ITEMS = new Set(["special-charles-burger"]);
 
 /**
  * White card with the picture and text inside it (Apple store product card):
@@ -102,7 +101,7 @@ function MenuItemCard({
 }) {
   const dict = useDictionary();
   const orderable = canOrder && item.isAvailable;
-  const badge = ITEM_BADGES[item.slug];
+  const badge = SPECIAL_OFFER_ITEMS.has(item.slug);
 
   return (
     <button
@@ -141,12 +140,10 @@ function MenuItemCard({
           )}
         </span>
         {badge && (
-          <Image
-            src={badge}
-            alt=""
-            width={56}
-            height={56}
-            className="absolute start-0 top-0 size-[30%] object-contain"
+          <SpecialOfferBadge
+            top={dict?.order?.specialOffer?.top}
+            bottom={dict?.order?.specialOffer?.bottom}
+            className="absolute start-0 top-0 size-[30%]"
           />
         )}
       </span>

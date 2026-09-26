@@ -52,6 +52,10 @@
     "add": "Add",
     "soldOut": "Sold out",
     "new": "New",
+    "specialOffer": {
+      "top": "Special",
+      "bottom": "Offer"
+    },
     "from": "From {price}",
     "viewCart": "View order",
     "itemCount": "{count} items",
