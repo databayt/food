@@ -2,8 +2,13 @@ import type { NextConfig } from "next"
 
 const cdnDomain = process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim()
 
+// Cloudflare Containers lane (scripts/deploy-cloudflare.sh): the standalone
+// server runs in a container, so it needs output: "standalone" (mkan).
+const CF_CONTAINER = process.env.CF_CONTAINER === "1"
+
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  ...(CF_CONTAINER ? { output: "standalone" as const } : {}),
   // Prisma + the Neon/pg driver stack must stay external to the server bundle.
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-neon", "@prisma/adapter-pg", "@neondatabase/serverless", "pg", "ws"],
   experimental: {

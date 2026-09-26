@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Charles Burgers on Cloudflare Containers — the same lane as mkan and hogwarts:
+  // a thin Worker (cf/worker.js) in front of one container running the Next
+  // standalone server. Built on the Mac by scripts/deploy-cloudflare.sh.
+  "name": "food",
+  "main": "cf/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "containers": [
+    {
+      "class_name": "FoodContainer",
+      "image": "./Dockerfile.cf",
+      "max_instances": 1,
+      "instance_type": "standard-1"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "FOOD", "class_name": "FoodContainer" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FoodContainer"] }],
+  // bu.databayt.org is a proxied AAAA 100:: placeholder in the databayt.org zone;
+  // this route is what actually serves it (same pattern as kun.databayt.org).
+  "routes": [{ "pattern": "bu.databayt.org/*", "zone_name": "databayt.org" }]
+}
