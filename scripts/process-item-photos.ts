@@ -33,6 +33,9 @@ export const ITEM_PHOTOS: Record<string, string> = {
   "cheese-extra": "image-removebg-preview-6.png",
   "sauce-extra": "image-removebg-preview-7.png",
   "fries-extra": "image-removebg-preview-12.png",
+  "beef-pilau": "image-removebg-preview-13.png",
+  "chicken-and-fries": "image-removebg-preview-14.png",
+  "chicken-pilau": "image-removebg-preview-15.png",
 };
 
 /**
