@@ -43,6 +43,27 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm i18n:check && pnpm build
 pnpm seed:test-staff && pnpm test:e2e   # Playwright (desktop, Pixel 7, iPhone 13, Arabic)
 ```
 
+## Deploy (Cloudflare Containers — the mkan/hogwarts lane)
+
+Live at **https://bu.databayt.org** (Worker `food`, also `food.osmanabdout.workers.dev`).
+DNS: proxied `AAAA bu 100::` in the `databayt.org` zone; the Worker route `bu.databayt.org/*` serves it.
+Database: Neon project `food`, branch `main` (production). `.env` points at `dev`.
+
+Production values live only in the macOS Keychain as `cf-food-<VAR>` (no Vercel project):
+
+```bash
+F="$TMPDIR/food-prod.env"; scripts/cf-keychain-env.sh > "$F"      # never print it
+scripts/deploy-cloudflare.sh "$F" build     # standalone build of HEAD (CF_SOURCE=worktree for uncommitted)
+scripts/deploy-cloudflare.sh "$F" smoke     # linux/amd64 image on :3300, curl table — read it
+scripts/cf-secrets.sh "$F"                  # only when a secret changed
+scripts/deploy-cloudflare.sh "$F" deploy    # wrangler pushes the image, swaps the container
+curl -s https://bu.databayt.org/api/health  # uptime resets when the new container serves
+```
+
+Schema changes: `DATABASE_URL=$DIRECT DIRECT_URL=$DIRECT pnpm exec prisma migrate deploy` against
+`main` **before** deploying code that needs them (take a Neon restore-point branch first).
+The production admin is `admin@charlesburgers.rw`; its password is Keychain `cf-food-SEED_ADMIN_PASSWORD`.
+
 ## Design notes
 
 - **Money** is `Int` whole Rwandan francs (RWF has no minor unit). Formatted `4,000 RWF`.
