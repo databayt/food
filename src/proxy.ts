@@ -69,13 +69,14 @@ function isOriginMismatch(request: NextRequest): boolean {
 function buildCsp(isDev: boolean): string {
   const directives = [
     "default-src 'self'",
+    // static.cloudflareinsights.com: the zone's Web Analytics beacon, injected at the edge.
     isDev
-      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"
-      : "script-src 'self' 'unsafe-inline'",
+      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com"
+      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://*.amazonaws.com",
+    "connect-src 'self' https://*.amazonaws.com https://cloudflareinsights.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -162,7 +163,8 @@ export function proxy(request: NextRequest) {
     const locale = negotiateLocale(request);
     const url = request.nextUrl.clone();
     // "/" is the QR target: land straight on the menu (one redirect, not two).
-    url.pathname = pathname === "/" ? `/${locale}/order` : `/${locale}${pathname}`;
+    url.pathname =
+      pathname === "/" ? `/${locale}/order` : `/${locale}${pathname}`;
     return withSecurityHeaders(NextResponse.redirect(url), requestId, locale);
   }
 
