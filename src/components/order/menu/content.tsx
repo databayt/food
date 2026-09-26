@@ -20,9 +20,7 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
       <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} isOpen={restaurant.isOpen} openLabel={dict.common.open} closedLabel={dict.common.closed} />
       <main id="main-content" className="min-h-dvh bg-muted pb-32">
         <MenuBanner dict={dict} isOpen={restaurant.isOpen} whatsappNumber={restaurant.whatsappNumber} />
-        <div className="pb-2 pt-6">
-          <RecentOrders lang={lang} menu={menu} canOrder={canOrder} />
-        </div>
+        <RecentOrders lang={lang} menu={menu} canOrder={canOrder} />
         <MenuBoard menu={menu} canOrder={canOrder} />
         <footer className="mx-auto max-w-5xl border-t px-4 py-8">
           <WhatsAppFallback

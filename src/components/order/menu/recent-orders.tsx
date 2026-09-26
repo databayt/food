@@ -37,7 +37,7 @@ export function RecentOrders({ lang, menu, canOrder }: { lang: Locale; menu: Men
   }
 
   return (
-    <section aria-labelledby="recent-orders" className="mx-auto max-w-5xl px-4">
+    <section aria-labelledby="recent-orders" className="mx-auto max-w-5xl px-4 pt-6">
       <h2 id="recent-orders" className="mb-2 text-base font-semibold sm:text-base lg:text-base">
         {dict?.order?.recentOrders ?? "Your recent orders"}
       </h2>
