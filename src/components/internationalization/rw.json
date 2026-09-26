@@ -41,15 +41,13 @@
   },
   "order": {
     "title": "Menu",
-    "heading": "Urashaka kurya iki?",
-    "subheading": "Tumiza mu kanya gato. Uza kubifata cyangwa tukakugezaho.",
-    "closedBanner": "Ubu ntitwakira komande. Ushobora kureba menu.",
-    "printedMenu": "Menu yacu icapye",
-    "printedMenuHint": "Kanda urebe neza",
-    "printedMenuAlt": {
-      "burgers": "Menu icapye ya Charles Burgers: burger, combo, ibyongerwaho n'ibinyobwa",
-      "meals": "Menu icapye ya Charles Burgers: pilau y'inyama, inkoko n'ifiriti, pilau y'inkoko"
+    "banner": {
+      "title": "Ibiryo byiza. {mark}",
+      "mark": "Uburyohe buhebuje.",
+      "cta": "Tangira gutumiza",
+      "browse": "Reba menu"
     },
+    "closedBanner": "Ubu ntitwakira komande. Ushobora kureba menu.",
     "categories": "Ibice bya menu",
     "add": "Ongeramo",
     "soldOut": "Byashize",

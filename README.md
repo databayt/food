@@ -33,8 +33,9 @@ pnpm seed                     # menu (create-only) + first admin
 pnpm dev                      # http://localhost:3000
 ```
 
-Menu photos: `pnpm menu:photos [dir]` regenerates `public/menu/*.webp` from
-the owner's originals (default `~/Downloads`). See `docs/menu-sources.md`.
+Item photos: `pnpm items:photos` cuts the supplied photos (fake checkerboard
+backgrounds) into transparent `public/items/<slug>.webp`; `pnpm items:attach`
+links them to items that have no photo yet. Prices: see `docs/menu-sources.md`.
 
 ## Quality gates
 

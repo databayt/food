@@ -2,8 +2,6 @@ import "server-only"
 
 import { db } from "@/lib/db"
 
-export type MenuImage = { src: string; width: number; height: number; alt: "burgers" | "meals" | string }
-
 export type RestaurantSettings = {
   name: string
   phone: string | null
@@ -17,7 +15,6 @@ export type RestaurantSettings = {
   deliveryFee: number
   cashEnabled: boolean
   momoEnabled: boolean
-  menuImages: MenuImage[]
 }
 
 const DEFAULTS: RestaurantSettings = {
@@ -33,7 +30,6 @@ const DEFAULTS: RestaurantSettings = {
   deliveryFee: 0,
   cashEnabled: true,
   momoEnabled: false,
-  menuImages: [],
 }
 
 /** Customer-safe restaurant settings (singleton row "default"). */
@@ -53,6 +49,5 @@ export async function getRestaurant(): Promise<RestaurantSettings> {
     deliveryFee: row.deliveryFee,
     cashEnabled: row.cashEnabled,
     momoEnabled: row.momoEnabled,
-    menuImages: Array.isArray(row.menuImages) ? (row.menuImages as MenuImage[]) : [],
   }
 }

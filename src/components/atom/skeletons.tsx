@@ -20,20 +20,20 @@ export function MenuSkeleton() {
   return (
     <div aria-busy="true">
       <HeaderGhost />
-      <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-        <Skeleton className="h-9 w-3/4" />
-        <div className="flex gap-3">
-          <Skeleton className="h-40 w-30 rounded-2xl" />
-          <Skeleton className="h-40 w-52 rounded-2xl" />
-        </div>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 pt-4">
+        <Skeleton className="h-[220px] w-full rounded-[28px] sm:rounded-[36px] lg:h-[259px]" />
         <div className="flex gap-2">
           {Array.from({ length: 4 }, (_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-full" />
           ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-28 rounded-2xl" />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="aspect-[4/3] w-full rounded-2xl" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
           ))}
         </div>
       </div>

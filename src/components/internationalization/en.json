@@ -41,15 +41,13 @@
   },
   "order": {
     "title": "Menu",
-    "heading": "What are you craving?",
-    "subheading": "Order in a few taps. Pickup or delivery.",
-    "closedBanner": "We're not taking orders right now. You can still browse the menu.",
-    "printedMenu": "Our printed menu",
-    "printedMenuHint": "Tap to zoom",
-    "printedMenuAlt": {
-      "burgers": "Charles Burgers printed menu: burgers, combos, extras and drinks",
-      "meals": "Charles Burgers printed menu: beef pilau, chicken and fries, chicken pilau"
+    "banner": {
+      "title": "Good food. {mark}",
+      "mark": "Great taste.",
+      "cta": "Start your order",
+      "browse": "Browse the menu"
     },
+    "closedBanner": "We're not taking orders right now. You can still browse the menu.",
     "categories": "Menu categories",
     "add": "Add",
     "soldOut": "Sold out",

@@ -2,11 +2,13 @@ import { expect, test } from "@playwright/test"
 
 import { addBurgerWithCheese, fillCheckout, goToCheckout, ordersFor, placeOrder, testCustomer } from "./helpers"
 
-test("menu loads with printed menu, categories and RWF prices, without horizontal scroll", async ({ page }) => {
+test("menu loads with the banner, photo cards and RWF prices, without horizontal scroll", async ({ page }) => {
   await page.goto("/")
   await expect(page).toHaveURL(/\/en\/order$/)
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
-  await expect(page.getByRole("button", { name: /printed menu/i }).first()).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Good food. Great taste.")
+  await expect(page.getByTestId("banner-cta")).toBeVisible()
+  await expect(page.locator('[data-item="classic-beef-burger"] img').first()).toBeVisible()
   await expect(page.locator('[data-item="classic-beef-burger"]')).toContainText("3,000 RWF")
   await expect(page.locator('[data-item="beef-pilau"]')).toContainText("4,000 RWF")
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)

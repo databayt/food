@@ -12,6 +12,7 @@
 import "dotenv/config"
 
 import { db } from "../src/lib/db"
+import { ITEM_PHOTOS } from "./process-item-photos"
 
 type Seed = {
   slug: string
@@ -95,10 +96,6 @@ async function main() {
       deliveryEnabled: true,
       // Not printed on the menu — the owner sets it in Admin → Settings.
       deliveryFee: 0,
-      menuImages: [
-        { src: "/menu/menu-burgers", width: 1280, height: 1707, alt: "burgers" },
-        { src: "/menu/menu-meals", width: 1280, height: 960, alt: "meals" },
-      ],
     },
   })
 
@@ -151,6 +148,7 @@ async function main() {
         slug: item.slug,
         categoryId,
         price: item.price,
+        imageUrl: item.slug in ITEM_PHOTOS ? `/items/${item.slug}.webp` : null,
         isNew: item.isNew ?? false,
         sortOrder: index * 10,
         source: "PHOTO",

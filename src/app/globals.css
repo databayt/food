@@ -45,6 +45,10 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-whatsapp: var(--whatsapp);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-mint: var(--brand-mint);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -91,6 +95,13 @@
   --sidebar-ring: oklch(0.708 0 0);
   /* WhatsApp brand green for the fallback button. */
   --whatsapp: oklch(0.77 0.19 150);
+  /* Brand ground — the balqalam live-banner green (hogwarts status-hero).
+     Deliberately NOT inverted in dark mode, and its ink is pinned dark: white
+     on this green measures ~2.5:1 and is unreadable. */
+  --brand: #00bc6d;
+  --brand-ink: #050505;
+  --brand-deep: #045238;
+  --brand-mint: #9fe5b1;
 }
 
 /* Arabic UI face — Thmanyah serif text (خط ثمانية), mirrored from hogwarts.

@@ -92,16 +92,23 @@ export function MenuBoard({ menu, canOrder }: { menu: MenuView; canOrder: boolea
         </div>
       </nav>
 
-      <div ref={listRef} data-menu-ready="false" className="mx-auto max-w-5xl space-y-8 px-4 py-6">
+      <div ref={listRef} id="menu" data-menu-ready="false" className="mx-auto max-w-5xl scroll-mt-28 space-y-10 px-4 py-6">
         {menu.categories.map((category) => (
           <section key={category.id} id={`cat-${category.slug}`} aria-labelledby={`h-${category.slug}`} className="scroll-mt-32">
-            <h2 id={`h-${category.slug}`} dir="auto" className="mb-3 text-start text-xl font-bold sm:text-2xl lg:text-2xl">
+            <h2 id={`h-${category.slug}`} dir="auto" className="mb-4 text-start text-xl font-bold sm:text-2xl lg:text-2xl">
               {category.name}
             </h2>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {category.items.map((item) => (
+            {/* mkan listings grid: 2-up on phones, 4-up on laptops. */}
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-4">
+              {category.items.map((item, index) => (
                 <li key={item.id}>
-                  <MenuItemCard item={item} canOrder={canOrder} onOpen={() => open(item)} onQuickAdd={() => quickAdd(item)} />
+                  <MenuItemCard
+                    item={item}
+                    canOrder={canOrder}
+                    priority={index < 2 && category === menu.categories[0]}
+                    onOpen={() => open(item)}
+                    onQuickAdd={() => quickAdd(item)}
+                  />
                 </li>
               ))}
             </ul>
@@ -114,76 +121,81 @@ export function MenuBoard({ menu, canOrder }: { menu: MenuView; canOrder: boolea
   )
 }
 
+/**
+ * mkan listing card (components/listings/property/card.tsx): a 4:3 rounded
+ * picture with a pill badge at the top start and a round action at the top
+ * end, then a truncated title, a muted line and an underlined price.
+ * Item photos are transparent cut-outs, so they sit on the muted ground.
+ */
 function MenuItemCard({
   item,
   canOrder,
+  priority,
   onOpen,
   onQuickAdd,
 }: {
   item: MenuItemView
   canOrder: boolean
+  priority: boolean
   onOpen: () => void
   onQuickAdd: () => void
 }) {
   const dict = useDictionary()
   const orderable = canOrder && item.isAvailable
+  const badge = !item.isAvailable ? (dict?.order?.soldOut ?? "Sold out") : item.isNew ? (dict?.order?.new ?? "New") : null
+
   return (
-    <div
-      className={cn(
-        "relative flex h-full gap-3 rounded-2xl border bg-card p-3 transition-shadow",
-        orderable && "hover:shadow-md",
-        !item.isAvailable && "opacity-60"
-      )}
-      data-testid="menu-item"
-      data-item={item.slug}
-    >
+    <div className={cn("group relative", !item.isAvailable && "opacity-60")} data-testid="menu-item" data-item={item.slug}>
       <button
         type="button"
         onClick={onOpen}
         disabled={!orderable}
-        className="flex min-w-0 flex-1 flex-col items-start gap-1 text-start after:absolute after:inset-0 after:rounded-2xl disabled:cursor-default"
+        className="block w-full text-start after:absolute after:inset-0 disabled:cursor-default"
+        aria-label={item.name}
       >
-        <span className="flex flex-wrap items-center gap-2">
-          <span dir="auto" className="font-semibold leading-tight">{item.name}</span>
-          {item.isNew && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-              {dict?.order?.new ?? "New"}
-            </span>
-          )}
-          {!item.isAvailable && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-              {dict?.order?.soldOut ?? "Sold out"}
-            </span>
+        <span className="relative mb-3 block aspect-[4/3] w-full overflow-hidden rounded-2xl bg-muted">
+          {item.imageUrl ? (
+            <Image
+              src={item.imageUrl}
+              alt=""
+              fill
+              priority={priority}
+              sizes="(max-width: 1024px) 50vw, 240px"
+              className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <Image src="/logo.png" alt="" width={96} height={96} className="absolute inset-0 m-auto size-[42%] object-contain opacity-90" />
           )}
         </span>
-        {item.description && (
-          <span dir="auto" className="line-clamp-2 text-sm text-muted-foreground">
-            {item.description}
+        <span className="block space-y-0.5">
+          <span dir="auto" className="block truncate text-sm font-medium text-foreground">
+            {item.name}
           </span>
-        )}
-        <Price amount={item.price} className="mt-auto pt-1 font-semibold" />
+          {item.description && (
+            <span dir="auto" className="block truncate text-sm text-muted-foreground">
+              {item.description}
+            </span>
+          )}
+          <Price amount={item.price} className="block text-sm font-semibold text-foreground underline underline-offset-2" />
+        </span>
       </button>
-      <div className="relative flex shrink-0 flex-col items-end justify-between gap-2">
-        {item.imageUrl && (
-          <div className="relative size-20 overflow-hidden rounded-xl bg-muted">
-            <Image src={item.imageUrl} alt={item.name} fill sizes="80px" className="object-cover" />
-          </div>
-        )}
-        {orderable && (
-          <button
-            type="button"
-            onClick={onQuickAdd}
-            className={cn(
-              "relative z-10 grid size-10 place-items-center rounded-full bg-foreground text-background shadow-md transition-transform active:scale-95",
-              item.imageUrl ? "-mt-7 me-1" : "mt-auto"
-            )}
-            aria-label={`${dict?.order?.add ?? "Add"} ${item.name}`}
-            data-testid="quick-add"
-          >
-            <Plus className="size-5" />
-          </button>
-        )}
-      </div>
+
+      {badge && (
+        <span className="pointer-events-none absolute start-3 top-3 rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
+          {badge}
+        </span>
+      )}
+      {orderable && (
+        <button
+          type="button"
+          onClick={onQuickAdd}
+          className="absolute end-3 top-3 z-10 grid size-9 place-items-center rounded-full bg-background text-foreground shadow-md transition-transform active:scale-95"
+          aria-label={`${dict?.order?.add ?? "Add"} ${item.name}`}
+          data-testid="quick-add"
+        >
+          <Plus className="size-5" />
+        </button>
+      )}
     </div>
   )
 }

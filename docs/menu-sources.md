@@ -1,14 +1,34 @@
 # Menu sources
 
 Every seeded price is verified against the owner's printed-menu photographs.
-The originals live outside the repo; `pnpm menu:photos` turns them into the
-web assets in `public/menu/` (rotated, EXIF/GPS stripped, WebP 640/1280).
+The photographs are price sources only — they are not published (the menu
+page opens with a brand banner instead).
 
 | Photo | Shows | Used as |
 |---|---|---|
-| `IMG_2910.jpeg` | Burger menu (portrait) | `public/menu/menu-burgers-*.webp`, price source |
-| `IMG_2911.jpeg` | Meals menu (shot sideways → rotated 90°) | `public/menu/menu-meals-*.webp`, price source |
-| `IMG_2909.jpeg` | Storefront sign at night | Reference only (phone number, logo) — not published |
+| `IMG_2910.jpeg` | Burger menu (portrait) | price source |
+| `IMG_2911.jpeg` | Meals menu (shot sideways) | price source |
+| `IMG_2909.jpeg` | Storefront sign at night | reference only (phone number) |
+
+## Item photos
+
+Product shots supplied on 2026-09-26, background removed with remove.bg
+(`~/Downloads/<uuid>-removebg-preview.png`, 500px, not committed).
+`pnpm items:photos` trims them onto transparent squares as
+`public/items/<slug>.webp`; `pnpm items:attach` links them to items that have
+no photo yet (never overwriting one set in the admin).
+
+| Item | Source |
+|---|---|
+| Classic Beef Burger | `38ede194…` |
+| Double Beef Burger | `f685bec1…` |
+| Classic Chicken Burger | `63a2ae45…` |
+| Classic Beef Burger + Fries | `79979129…` |
+| Double Beef Burger + Fries | `c8026c7c…` |
+| Classic Chicken Burger + Fries | `5318839a…` |
+
+Items without a photo (meals, extras, drinks, Double Chicken, the Special)
+show the logo until staff upload one in Admin → Menu items.
 
 ## Items
 

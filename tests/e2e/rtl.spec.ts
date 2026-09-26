@@ -5,7 +5,7 @@ test("Arabic renders right-to-left and the switcher moves to Kinyarwanda (LTR)",
   await expect(page).toHaveURL(/\/ar\/order$/) // Accept-Language: ar
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
   await expect(page.locator("html")).toHaveAttribute("lang", "ar")
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("ماذا تشتهي اليوم؟")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("أكل طيب. طعم رائع.")
   await expect(page.locator('[data-item="classic-beef-burger"]')).toContainText("3,000 RWF")
 
   await page.getByTestId("language-switcher").click()
@@ -13,7 +13,7 @@ test("Arabic renders right-to-left and the switcher moves to Kinyarwanda (LTR)",
   await expect(page).toHaveURL(/\/rw\/order$/)
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr")
   await expect(page.locator("html")).toHaveAttribute("lang", "rw")
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Urashaka kurya iki?")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ibiryo byiza. Uburyohe buhebuje.")
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)

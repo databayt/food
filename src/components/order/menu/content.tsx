@@ -4,9 +4,9 @@ import { getRestaurant } from "@/components/restaurant/queries"
 import { SiteHeader } from "@/components/template/site-header"
 
 import { WhatsAppFallback } from "../whatsapp-fallback"
+import { MenuBanner } from "./banner"
 import { CartBar } from "./cart-bar"
 import { MenuBoard } from "./menu-board"
-import { PrintedMenu } from "./printed-menu"
 import { getMenu } from "./queries"
 import { RecentOrders } from "./recent-orders"
 
@@ -19,18 +19,9 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
     <>
       <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} isOpen={restaurant.isOpen} openLabel={dict.common.open} closedLabel={dict.common.closed} />
       <main id="main-content" className="pb-32">
-        <div className="mx-auto max-w-5xl px-4 pb-4 pt-6">
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-4xl">{dict.order.heading}</h1>
-          <p className="mt-1">{dict.order.subheading}</p>
-          {!restaurant.isOpen && (
-            <p role="status" className="mt-4 rounded-xl bg-muted px-4 py-3 text-sm font-medium text-foreground">
-              {dict.order.closedBanner}
-            </p>
-          )}
-        </div>
-        <div className="space-y-6 pb-2">
+        <MenuBanner dict={dict} isOpen={restaurant.isOpen} whatsappNumber={restaurant.whatsappNumber} />
+        <div className="pb-2 pt-6">
           <RecentOrders lang={lang} menu={menu} canOrder={canOrder} />
-          <PrintedMenu images={restaurant.menuImages} />
         </div>
         <MenuBoard menu={menu} canOrder={canOrder} />
         <footer className="mx-auto max-w-5xl border-t px-4 py-8">
