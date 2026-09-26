@@ -29,7 +29,9 @@ export function MenuBoard({
   const listRef = useRef<HTMLDivElement>(null);
   // One grid in the menu's own order (sortOrder is global — see
   // scripts/process-item-photos.ts MENU_ORDER); category order breaks ties.
-  const items = menu.categories.flatMap((c) => c.items).sort((a, b) => a.sortOrder - b.sortOrder);
+  const items = menu.categories
+    .flatMap((c) => c.items)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   // Hydration marker: interactive from here on (used by slow-network e2e).
   useEffect(() => {
@@ -85,8 +87,9 @@ const SPECIAL_OFFER_ITEMS = new Set(["special-charles-burger"]);
 
 /**
  * White card with the picture and text inside it (Apple store product card):
- * transparent cut-out on white, a small "New" / "Sold out" label, the name
- * and the price. No hover zoom; the whole card is the tap target.
+ * transparent cut-out on white, a small "New" / "Sold out" label (a design
+ * badge replaces "New"), then name and price as one two-line run. No hover
+ * zoom; the whole card is the tap target.
  */
 function MenuItemCard({
   item,
@@ -143,7 +146,7 @@ function MenuItemCard({
           <SpecialOfferBadge
             top={dict?.order?.specialOffer?.top}
             bottom={dict?.order?.specialOffer?.bottom}
-            className="absolute start-0 top-0 size-[30%]"
+            className="absolute start-[6%] top-[14%] size-[28%]"
           />
         )}
       </span>
@@ -152,21 +155,21 @@ function MenuItemCard({
           <span className="text-xs font-medium text-muted-foreground">
             {dict?.order?.soldOut ?? "Sold out"}
           </span>
-        ) : item.isNew ? (
+        ) : item.isNew && !badge ? (
           <span className="text-xs font-medium text-primary">
             {dict?.order?.new ?? "New"}
           </span>
         ) : null}
+        {/* Figma menu sheet: name and price as one run — "Classic Beef
+            Burger - 3,000 R₣" — clamped to two lines, start-aligned. */}
         <span
           dir="auto"
-          className="line-clamp-2 text-sm font-semibold leading-snug text-foreground"
+          className="line-clamp-2 text-sm font-medium leading-snug text-foreground"
         >
           {item.name}
+          {" - "}
+          <Price amount={item.price} />
         </span>
-        <Price
-          amount={item.price}
-          className="mt-auto pt-2 text-sm font-medium text-foreground"
-        />
       </span>
     </button>
   );

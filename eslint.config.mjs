@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Container runtime glue (plain Node / Worker JS, CommonJS by design).
     "cf/**",
+    // Generated test output.
+    "playwright-report/**",
+    "test-results/**",
+    "coverage/**",
   ]),
 ]);
 

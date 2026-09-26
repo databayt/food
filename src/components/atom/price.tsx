@@ -5,15 +5,16 @@ import { cn } from "@/lib/utils"
 const grouping = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
 
 /**
- * An RWF amount: the R₣ sign (public/rwf.png, masked to currentColor) then
- * Latin digits — "R₣ 4,000". <bdi dir="ltr"> keeps the order inside Arabic.
- * Screen readers (and text search) get "4,000 RWF".
+ * An RWF amount: Latin digits then the R₣ sign (public/rwf.png, masked to
+ * currentColor) — "4,000 R₣", as on the Figma menu sheet. <bdi dir="ltr">
+ * keeps that order inside Arabic. Screen readers (and text search) get
+ * "4,000 RWF".
  */
 export function Price({ amount, className }: { amount: number; className?: string }) {
   return (
     <bdi dir="ltr" className={cn("inline-flex items-baseline gap-[0.25em] tabular-nums whitespace-nowrap", className)}>
-      <span className="rwf-sign self-center" aria-hidden="true" />
       <span>{grouping.format(amount)}</span>
+      <span className="rwf-sign self-center" aria-hidden="true" />
       {/* i18n-exempt — ISO currency code for assistive tech */}
       <span className="sr-only"> RWF</span>
     </bdi>
