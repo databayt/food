@@ -9,6 +9,8 @@ test("menu loads with the banner, photo cards and RWF prices, without horizontal
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Good food. Great taste.")
   await expect(page.getByTestId("banner-cta")).toBeVisible()
   await expect(page.locator('[data-item="classic-beef-burger"] img').first()).toBeVisible()
+  await expect(page.getByTestId("banner-cta")).toHaveText("Place order")
+  await expect(page.locator(".rwf-sign").first()).toBeVisible()
   await expect(page.locator('[data-item="classic-beef-burger"]')).toContainText("3,000 RWF")
   await expect(page.locator('[data-item="beef-pilau"]')).toContainText("4,000 RWF")
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)

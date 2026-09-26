@@ -4,13 +4,12 @@ import { useState } from "react"
 import { Minus, Plus } from "lucide-react"
 import { toast } from "sonner"
 
-import { Price } from "@/components/atom/price"
+import { Price, Priced } from "@/components/atom/price"
 import { interpolate } from "@/components/internationalization/interpolate"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
-import { formatRwf } from "@/lib/order/money"
 import { MAX_QUANTITY } from "@/lib/order/pricing"
 import { cn } from "@/lib/utils"
 
@@ -197,7 +196,7 @@ function ItemForm({ item, onDone }: { item: MenuItemView; onDone: () => void }) 
           onClick={submit}
           data-testid="add-to-order"
         >
-          {interpolate(dict?.order?.addToOrder ?? "Add to order · {price}", { price: formatRwf(total) })}
+          <Priced template={dict?.order?.addToOrder ?? "Add to order · {price}"} amount={total} />
         </Button>
       </div>
     </div>

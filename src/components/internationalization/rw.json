@@ -44,11 +44,11 @@
     "banner": {
       "title": "Ibiryo byiza. {mark}",
       "mark": "Uburyohe buhebuje.",
-      "cta": "Tangira gutumiza",
-      "browse": "Reba menu"
+      "cta": "Tumiza",
+      "browse": "Reba menu",
+      "whatsapp": "WhatsApp"
     },
     "closedBanner": "Ubu ntitwakira komande. Ushobora kureba menu.",
-    "categories": "Ibice bya menu",
     "add": "Ongeramo",
     "soldOut": "Byashize",
     "new": "Gishya",

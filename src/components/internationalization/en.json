@@ -44,11 +44,11 @@
     "banner": {
       "title": "Good food. {mark}",
       "mark": "Great taste.",
-      "cta": "Start your order",
-      "browse": "Browse the menu"
+      "cta": "Place order",
+      "browse": "Browse the menu",
+      "whatsapp": "WhatsApp"
     },
     "closedBanner": "We're not taking orders right now. You can still browse the menu.",
-    "categories": "Menu categories",
     "add": "Add",
     "soldOut": "Sold out",
     "new": "New",

@@ -43,7 +43,7 @@ export function RecentOrders({ lang, menu, canOrder }: { lang: Locale; menu: Men
       </h2>
       <ul className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">
         {orders.map((o) => (
-          <li key={o.token} className="flex shrink-0 items-center gap-2 rounded-2xl border p-2 ps-3">
+          <li key={o.token} className="flex shrink-0 items-center gap-2 rounded-2xl bg-card p-2 ps-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             {/* i18n-exempt — order number token */}
             <span className="font-semibold tabular-nums">#{o.number}</span>
             <Button asChild variant="ghost" size="sm" className="rounded-full">

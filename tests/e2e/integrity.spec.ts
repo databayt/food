@@ -99,7 +99,7 @@ test("@desktop the menu stays usable on a slow 3G connection", async ({ page, br
 test("@desktop an unavailable item is rejected at checkout", async ({ page }) => {
   const { db } = await import("./helpers")
   await page.goto("/en/order")
-  await page.locator('[data-item="soft-drink"]').getByTestId("quick-add").click()
+  await page.locator('[data-item="soft-drink"]').click()
   await page.getByTestId("add-to-order").click()
   await goToCheckout(page)
   const name = testCustomer("SoldOut")

@@ -159,6 +159,17 @@ body {
   overflow-x: hidden;
 }
 
+/* Rwandan franc sign (R₣), drawn from public/rwf.png as a mask so it takes
+   the surrounding text colour and scales with the font size. */
+.rwf-sign {
+  display: inline-block;
+  width: 1.3em;
+  height: 0.81em;
+  background-color: currentColor;
+  -webkit-mask: url("/rwf.png") no-repeat center / contain;
+  mask: url("/rwf.png") no-repeat center / contain;
+}
+
 /* Safe-area helpers for sticky mobile bars (cart bar, staff bottom nav). */
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);

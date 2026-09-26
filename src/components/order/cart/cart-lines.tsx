@@ -2,11 +2,9 @@
 
 import { Minus, Plus, Trash2 } from "lucide-react"
 
-import { Price } from "@/components/atom/price"
-import { interpolate } from "@/components/internationalization/interpolate"
+import { Price, Priced } from "@/components/atom/price"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { Button } from "@/components/ui/button"
-import { formatRwf } from "@/lib/order/money"
 import { MAX_QUANTITY } from "@/lib/order/pricing"
 import { cn } from "@/lib/utils"
 
@@ -46,7 +44,7 @@ export function CartLines({ resolved, editable = true }: { resolved: ResolvedLin
             ) : (
               editable && (
                 <p className="text-xs">
-                  {interpolate(dict?.cart?.each ?? "{price} each", { price: formatRwf(unitPrice + modifiersTotal) })}
+                  <Priced template={dict?.cart?.each ?? "{price} each"} amount={unitPrice + modifiersTotal} />
                 </p>
               )
             )}

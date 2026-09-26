@@ -21,7 +21,8 @@ test("Arabic renders right-to-left and the switcher moves to Kinyarwanda (LTR)",
 
 test("the Arabic checkout keeps phone input left-to-right", async ({ page }) => {
   await page.goto("/ar/order")
-  await page.locator('[data-item="classic-beef-burger"]').getByTestId("quick-add").click()
+  await page.locator('[data-item="classic-beef-burger"]').click()
+  await page.getByTestId("add-to-order").click()
   await page.getByTestId("cart-bar").click()
   await page.getByTestId("go-checkout").click()
   await expect(page.locator('input[name="phone"]')).toHaveAttribute("dir", "ltr")

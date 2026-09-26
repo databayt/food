@@ -18,7 +18,7 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
   return (
     <>
       <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} isOpen={restaurant.isOpen} openLabel={dict.common.open} closedLabel={dict.common.closed} />
-      <main id="main-content" className="pb-32">
+      <main id="main-content" className="min-h-dvh bg-muted pb-32">
         <MenuBanner dict={dict} isOpen={restaurant.isOpen} whatsappNumber={restaurant.whatsappNumber} />
         <div className="pb-2 pt-6">
           <RecentOrders lang={lang} menu={menu} canOrder={canOrder} />

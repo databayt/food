@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, Bike, Loader2, Store, Banknote, Smartphone } fro
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
-import { Price } from "@/components/atom/price"
+import { Price, Priced } from "@/components/atom/price"
 import type { Locale } from "@/components/internationalization/config"
 import { interpolate } from "@/components/internationalization/interpolate"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import type { RestaurantSettings } from "@/components/restaurant/queries"
-import { formatRwf } from "@/lib/order/money"
 import { cn } from "@/lib/utils"
 
 import { CartLines } from "../cart/cart-lines"
@@ -329,7 +328,7 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
                       {dict?.checkout?.placing ?? "Placing your order…"}
                     </>
                   ) : (
-                    interpolate(dict?.checkout?.placeOrder ?? "Place order · {total}", { total: formatRwf(total) })
+                    <Priced template={(dict?.checkout?.placeOrder ?? "Place order · {total}").replace("{total}", "{price}")} amount={total} />
                   )}
                 </Button>
               ) : (

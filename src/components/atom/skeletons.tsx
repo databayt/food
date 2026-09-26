@@ -18,19 +18,14 @@ function HeaderGhost() {
 
 export function MenuSkeleton() {
   return (
-    <div aria-busy="true">
+    <div aria-busy="true" className="min-h-dvh bg-muted">
       <HeaderGhost />
       <div className="mx-auto max-w-5xl space-y-6 px-4 pt-4">
         <Skeleton className="h-[220px] w-full rounded-[28px] sm:rounded-[36px] lg:h-[259px]" />
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} className="h-9 w-24 rounded-full" />
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="aspect-[4/3] w-full rounded-2xl" />
+            <div key={i} className="space-y-3 rounded-3xl bg-background p-3 sm:p-4">
+              <Skeleton className="aspect-square w-full rounded-2xl" />
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </div>
