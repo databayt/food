@@ -13,6 +13,14 @@ import { defineConfig, devices } from "@playwright/test"
  */
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000"
 
+// Every test starts with the install sheet already dismissed — it opens over
+// the menu on a phone's first visit and would swallow the first click.
+// tests/e2e/pwa.spec.ts clears this to cover the sheet itself.
+const installSheetDismissed = {
+  cookies: [],
+  origins: [{ origin: new URL(baseURL).origin, localStorage: [{ name: "pwa-install-dismissed-at", value: String(Date.now()) }] }],
+}
+
 export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: "**/*.spec.ts",
@@ -29,6 +37,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     locale: "en-US",
+    storageState: installSheetDismissed,
   },
   projects: [
     { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: /rtl\.spec/ },
