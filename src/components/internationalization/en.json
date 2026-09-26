@@ -65,7 +65,7 @@
     "decrease": "Decrease quantity",
     "increase": "Increase quantity",
     "instructions": "Special instructions",
-    "instructionsPlaceholder": "e.g. no onions, extra spicy",
+    "notes": { "noOnions": "No onions", "noTomato": "No tomato", "noLettuce": "No lettuce", "noSauce": "No sauce", "extraSpicy": "Extra spicy", "notSpicy": "Not spicy", "cutInHalf": "Cut in half" },
     "addToOrder": "Add to order · {price}",
     "chooseOne": "Choose 1",
     "chooseUpTo": "Choose up to {max}",

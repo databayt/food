@@ -65,7 +65,7 @@
     "decrease": "Gabanya umubare",
     "increase": "Ongera umubare",
     "instructions": "Amabwiriza yihariye",
-    "instructionsPlaceholder": "urugero: nta bitunguru, urusenda rwinshi",
+    "notes": { "noOnions": "Nta bitunguru", "noTomato": "Nta nyanya", "noLettuce": "Nta salade", "noSauce": "Nta sosi", "extraSpicy": "Urusenda rwinshi", "notSpicy": "Nta rusenda", "cutInHalf": "Gukatamo kabiri" },
     "addToOrder": "Ongera muri komande · {price}",
     "chooseOne": "Hitamo 1",
     "chooseUpTo": "Hitamo kugeza kuri {max}",

@@ -6,6 +6,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { db } from "@/lib/db"
 import { pickTranslation } from "@/lib/order/localize"
 
+import { OPTION_IMAGES } from "./option-images"
 import type { MenuItemView, MenuView } from "./types"
 
 /**
@@ -54,6 +55,7 @@ export async function getMenu(locale: Locale): Promise<MenuView> {
             return {
               id: item.id,
               slug: item.slug,
+              category: c.slug,
               name: t?.name ?? item.slug,
               description: t?.description ?? null,
               price: item.price,
@@ -68,7 +70,9 @@ export async function getMenu(locale: Locale): Promise<MenuView> {
                 maxSelect: group.maxSelect,
                 options: group.options.map((o) => ({
                   id: o.id,
+                  slug: o.slug,
                   name: pickTranslation(o.translations, locale)?.name ?? o.slug,
+                  imageUrl: OPTION_IMAGES[o.slug] ?? null,
                   price: o.price,
                   isAvailable: o.isAvailable,
                 })),

@@ -1,6 +1,8 @@
 export type MenuOption = {
   id: string
+  slug: string
   name: string
+  imageUrl: string | null
   price: number
   isAvailable: boolean
 }
@@ -16,6 +18,8 @@ export type MenuModifierGroup = {
 export type MenuItemView = {
   id: string
   slug: string
+  /** Category slug — picks the sheet's instruction badges. */
+  category: string
   name: string
   description: string | null
   price: number

@@ -65,7 +65,7 @@
     "decrease": "إنقاص الكمية",
     "increase": "زيادة الكمية",
     "instructions": "تعليمات خاصة",
-    "instructionsPlaceholder": "مثلًا: بدون بصل، حار أكثر",
+    "notes": { "noOnions": "بدون بصل", "noTomato": "بدون طماطم", "noLettuce": "بدون خس", "noSauce": "بدون صوص", "extraSpicy": "حار أكثر", "notSpicy": "بدون حار", "cutInHalf": "مقسوم نصفين" },
     "addToOrder": "أضف إلى الطلب · {price}",
     "chooseOne": "اختر 1",
     "chooseUpTo": "اختر حتى {max}",
