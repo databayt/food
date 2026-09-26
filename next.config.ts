@@ -37,6 +37,12 @@ const nextConfig: NextConfig = {
     // The proxy skips /api, so API responses get their static headers here (mkan).
     return [
       {
+        // Browsers check for a new worker on every navigation; never let an
+        // HTTP cache hand back the old one.
+        source: "/service-worker.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+      {
         source: "/api/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },

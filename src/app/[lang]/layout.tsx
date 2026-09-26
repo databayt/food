@@ -7,6 +7,7 @@ import { Toaster } from "sonner"
 import { i18n, isLocale, localeConfig } from "@/components/internationalization/config"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ServiceWorkerProvider } from "@/components/pwa/service-worker-provider"
 import { BRAND_NAME } from "@/lib/site"
 
 export const viewport: Viewport = {
@@ -71,6 +72,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <DictionaryProvider lang={lang}>
           {children}
           <Toaster richColors position="top-center" dir={config.dir} />
+          <ServiceWorkerProvider />
         </DictionaryProvider>
       </body>
     </html>

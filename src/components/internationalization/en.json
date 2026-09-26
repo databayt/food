@@ -389,5 +389,21 @@
     "UPLOAD_FAILED": "Upload failed. Please try again.",
     "CATEGORY_NOT_EMPTY": "Move or archive its items first.",
     "INVALID_CREDENTIALS": "Wrong email or password."
+  },
+  "pwa": {
+    "appDesc": "Order faster. Opens full screen, like an app.",
+    "installTitle": "Add Charles Burgers to your Home Screen",
+    "step1": "Tap Continue",
+    "step2": "Choose “Add to Home Screen”",
+    "continue": "Continue",
+    "dismiss": "Not now",
+    "shareMenu": {
+      "bookmark": "Add Bookmark",
+      "favorites": "Add to Favorites",
+      "find": "Find on Page",
+      "home": "Add to Home Screen"
+    },
+    "offlineTitle": "You're offline",
+    "offlineBody": "Check your connection, then try again. Your cart is still saved on this phone."
   }
 }

@@ -389,5 +389,21 @@
     "UPLOAD_FAILED": "Kohereza byanze. Ongera ugerageze.",
     "CATEGORY_NOT_EMPTY": "Banza wimure cyangwa ushyingure ibintu birimo.",
     "INVALID_CREDENTIALS": "Imeri cyangwa ijambo ry'ibanga si byo."
+  },
+  "pwa": {
+    "appDesc": "Tumiza vuba. Ifunguka yuzuye nka porogaramu.",
+    "installTitle": "Shyira Charles Burgers kuri ecran y'ibanze",
+    "step1": "Kanda «Komeza»",
+    "step2": "Hitamo “Add to Home Screen”",
+    "continue": "Komeza",
+    "dismiss": "Ubu oya",
+    "shareMenu": {
+      "bookmark": "Add Bookmark",
+      "favorites": "Add to Favorites",
+      "find": "Find on Page",
+      "home": "Add to Home Screen"
+    },
+    "offlineTitle": "Nta murandasi",
+    "offlineBody": "Reba ko ufite murandasi, hanyuma wongere ugerageze. Ibyo watoranyije biracyabitswe kuri iyi telefoni."
   }
 }

@@ -1,5 +1,6 @@
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { InstallSheet } from "@/components/pwa/install-sheet"
 import { getRestaurant } from "@/components/restaurant/queries"
 import { SiteHeader } from "@/components/template/site-header"
 
@@ -34,6 +35,7 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
         </footer>
       </main>
       <CartBar lang={lang} menu={menu} />
+      <InstallSheet />
     </div>
   )
 }
