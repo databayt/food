@@ -161,7 +161,8 @@ export function proxy(request: NextRequest) {
   if (!urlLocale) {
     const locale = negotiateLocale(request);
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
+    // "/" is the QR target: land straight on the menu (one redirect, not two).
+    url.pathname = pathname === "/" ? `/${locale}/order` : `/${locale}${pathname}`;
     return withSecurityHeaders(NextResponse.redirect(url), requestId, locale);
   }
 

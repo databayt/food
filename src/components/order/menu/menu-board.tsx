@@ -24,6 +24,12 @@ export function MenuBoard({ menu, canOrder }: { menu: MenuView; canOrder: boolea
   const [sheetItem, setSheetItem] = useState<MenuItemView | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const chipsRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  // Hydration marker: interactive from here on (used by slow-network e2e).
+  useEffect(() => {
+    listRef.current?.setAttribute("data-menu-ready", "true")
+  }, [])
 
   useEffect(() => {
     const sections = menu.categories
@@ -86,7 +92,7 @@ export function MenuBoard({ menu, canOrder }: { menu: MenuView; canOrder: boolea
         </div>
       </nav>
 
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
+      <div ref={listRef} data-menu-ready="false" className="mx-auto max-w-5xl space-y-8 px-4 py-6">
         {menu.categories.map((category) => (
           <section key={category.id} id={`cat-${category.slug}`} aria-labelledby={`h-${category.slug}`} className="scroll-mt-32">
             <h2 id={`h-${category.slug}`} dir="auto" className="mb-3 text-start text-xl font-bold sm:text-2xl lg:text-2xl">
