@@ -30,19 +30,13 @@ function isUniqueViolation(error: unknown, field: string): boolean {
 /**
  * Guest order creation — the transactional heart of the app.
  *
- *  1. rate limit (per IP)          5. compute totals server-side (integers)
- *  2. validate (Zod; prices ignored) 6. ONE transaction: customer, order, item
- *  3. idempotency fast path           snapshots, modifiers, payment, history
- *  4. settings + current menu rows  7. duplicate key → return the same order
+ *  1. validate (Zod; prices ignored)  5. settings + current menu rows
+ *  2. idempotency fast path            6. compute totals server-side (integers)
+ *  3. rate limit per IP (loose)        7. ONE transaction: customer, order, item
+ *  4. rate limit per phone (tight)        snapshots, modifiers, payment, history
+ *                                      8. duplicate key → return the same order
  */
 export async function createOrder(input: unknown): Promise<ActionResponse<CreatedOrder>> {
-  try {
-    await assertRateLimit("order", await getClientId())
-  } catch (error) {
-    if (error instanceof RateLimitError) return fail("RATE_LIMITED", { details: { retryAfter: error.retryAfter } })
-    throw error
-  }
-
   const parsed = CreateOrderSchema.safeParse(input)
   if (!parsed.success) {
     const errors = fieldErrors(parsed.error)
@@ -50,8 +44,17 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
   }
   const data = parsed.data
 
+  // A retry of an order that already exists is free — it never burns budget.
   const already = await findByKey(data.idempotencyKey)
   if (already) return ok(already)
+
+  try {
+    await assertRateLimit("order", await getClientId())
+    await assertRateLimit("order-phone", data.phone)
+  } catch (error) {
+    if (error instanceof RateLimitError) return fail("RATE_LIMITED", { details: { retryAfter: error.retryAfter } })
+    throw error
+  }
 
   const settings = await db.restaurant.findUnique({ where: { id: "default" } })
   if (!settings?.isOpen) return fail("RESTAURANT_CLOSED")

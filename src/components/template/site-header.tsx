@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { BrandMark } from "@/components/atom/brand-mark"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import type { Locale } from "@/components/internationalization/config"
 import { BRAND_NAME } from "@/lib/site"
@@ -15,9 +16,11 @@ export function SiteHeader({
   isOpen,
   openLabel,
   closedLabel,
+  logoUrl,
   children,
 }: {
   lang: Locale
+  logoUrl?: string | null
   isOpen?: boolean
   openLabel?: string
   closedLabel?: string
@@ -27,10 +30,7 @@ export function SiteHeader({
     <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-full max-w-5xl items-center gap-3 px-4">
         <Link href={`/${lang}/order`} className="flex min-w-0 items-center gap-2" aria-label={BRAND_NAME}>
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-black text-primary-foreground">
-            {/* i18n-exempt — brand monogram */}
-            CB
-          </span>
+          <BrandMark logoUrl={logoUrl} />
           <span className="truncate text-base font-extrabold tracking-tight">{BRAND_NAME}</span>
         </Link>
         {isOpen !== undefined && (

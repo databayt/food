@@ -20,7 +20,10 @@ const SCAN_DIRS = [
   "src/components/staff",
 ]
 
-const PHYSICAL = /className=[{"`][^"`]*\b(ml-|mr-|pl-|pr-|left-|right-|text-left|text-right|rounded-l-|rounded-r-|border-l-|border-r-)/
+// Matched anywhere on a line — inside className="…", cn("…", "…") arguments
+// spread over several lines, and template literals alike. A class token must
+// start the string or follow whitespace / a variant colon.
+const PHYSICAL = /(?:["'`\s:])-?(ml|mr|pl|pr|left|right)-(?:\d|\[|px|auto|full|1\/2)|(?:["'`\s:])(text-left|text-right|rounded-[lr]-|border-[lr]-|rounded-[lr]\b|border-[lr]\b)/
 
 function walk(dir: string): string[] {
   const abs = path.resolve(dir)
@@ -45,7 +48,7 @@ describe("RTL: feature code uses logical properties", () => {
         .readFileSync(path.resolve(file), "utf8")
         .split("\n")
         .map((line, i) => ({ n: i + 1, line: line.trim() }))
-        .filter(({ line }) => PHYSICAL.test(line) && !line.includes("rtl-exempt"))
+        .filter(({ line }) => !line.startsWith("//") && !line.startsWith("*") && PHYSICAL.test(line) && !line.includes("rtl-exempt"))
       expect(offenders, offenders.map((o) => `L${o.n}: ${o.line}`).join("\n")).toEqual([])
     })
   }

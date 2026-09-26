@@ -28,7 +28,8 @@
     "seed:admin": "tsx scripts/seed-admin.ts",
     "seed:test-staff": "tsx scripts/seed-test-staff.ts",
     "menu:photos": "tsx scripts/process-menu-photos.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "check:rate-limit": "tsx --conditions=react-server scripts/check-rate-limit.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1141.0",

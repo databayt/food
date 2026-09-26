@@ -21,7 +21,7 @@ export default async function CartPage({ params }: PageProps<"/[lang]/order/cart
   const [menu, restaurant] = await Promise.all([getMenu(lang), getRestaurant()])
   return (
     <>
-      <SiteHeader lang={lang} />
+      <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} />
       <CartContent lang={lang} menu={menu} canOrder={restaurant.isOpen} />
     </>
   )

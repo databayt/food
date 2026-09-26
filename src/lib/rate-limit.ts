@@ -14,8 +14,13 @@ import { headers } from "next/headers"
  */
 
 const TIER_CONFIG = {
-  /** Guest order creation — per client IP. */
-  order: { limit: 5, windowMs: 10 * 60_000, window: "10 m" },
+  /**
+   * Guest order creation — per client IP. Loose on purpose: Rwandan mobile
+   * traffic is heavily carrier-NATed, so one IP can be a whole neighbourhood.
+   */
+  order: { limit: 60, windowMs: 10 * 60_000, window: "10 m" },
+  /** Guest order creation — per normalized phone number (the real identity). */
+  "order-phone": { limit: 5, windowMs: 10 * 60_000, window: "10 m" },
   /** Guest order-status polling — per client IP. */
   track: { limit: 120, windowMs: 60_000, window: "1 m" },
   /** Staff login attempts — per IP. */
@@ -47,7 +52,7 @@ function upstashLimiter(tier: RateLimitTier): Ratelimit | null {
   return limiter
 }
 
-async function pgRateLimit(tier: RateLimitTier, identifier: string) {
+export async function pgRateLimit(tier: RateLimitTier, identifier: string) {
   const { limit, windowMs } = TIER_CONFIG[tier]
   const windowStart = Math.floor(Date.now() / windowMs) * windowMs
   const reset = windowStart + windowMs

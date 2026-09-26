@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { LogOut } from "lucide-react"
 import type { UserRole } from "@prisma/client"
 
+import { BrandMark } from "@/components/atom/brand-mark"
 import { ChefGlyph, ReceiptGlyph, SettingsGlyph } from "@/components/atom/icons"
 import { logout } from "@/components/auth/login/actions"
 import type { Locale } from "@/components/internationalization/config"
@@ -30,11 +31,13 @@ export function StaffShell({
   lang,
   role,
   userName,
+  logoUrl,
   children,
 }: {
   lang: Locale
   role: UserRole
   userName: string
+  logoUrl?: string | null
   children: React.ReactNode
 }) {
   const dict = useDictionary()
@@ -47,10 +50,7 @@ export function StaffShell({
       <header className="sticky top-0 z-40 h-14 border-b bg-background">
         <div className="mx-auto flex h-full max-w-7xl items-center gap-4 px-4">
           <Link href={`/${lang}${items[0]?.href ?? "/cashier"}`} className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-full bg-primary text-sm font-black text-primary-foreground">
-              {/* i18n-exempt — brand monogram */}
-              CB
-            </span>
+            <BrandMark logoUrl={logoUrl} />
             <span className="hidden font-extrabold sm:inline">{BRAND_NAME}</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex" aria-label={dict?.meta?.staffTitle ?? "Staff"}>

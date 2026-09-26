@@ -21,7 +21,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[lang]/order/
   const [menu, r] = await Promise.all([getMenu(lang), getRestaurant()])
   return (
     <>
-      <SiteHeader lang={lang} />
+      <SiteHeader lang={lang} logoUrl={r.logoUrl} />
       <CheckoutForm
         lang={lang}
         menu={menu}

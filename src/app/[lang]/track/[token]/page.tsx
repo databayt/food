@@ -27,7 +27,7 @@ export default async function TrackPage({ params, searchParams }: PageProps<"/[l
   if (!order) {
     return (
       <>
-        <SiteHeader lang={lang} />
+        <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} />
         <main id="main-content" className="mx-auto max-w-lg px-4 py-16 text-center">
           <h1 className="text-2xl font-bold sm:text-2xl lg:text-2xl">{dict.track.notFound}</h1>
           <p className="mt-2">{dict.track.notFoundHint}</p>
@@ -42,7 +42,7 @@ export default async function TrackPage({ params, searchParams }: PageProps<"/[l
   const helpMessage = interpolate(dict.track.title, { number: order.number })
   return (
     <>
-      <SiteHeader lang={lang} />
+      <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} />
       <TrackContent
         lang={lang}
         token={token}

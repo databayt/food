@@ -88,6 +88,7 @@ vi.mock("@/lib/db", async () => {
 
 import { createOrder } from "@/components/order/checkout/actions"
 import { db } from "@/lib/db"
+import { assertRateLimit } from "@/lib/rate-limit"
 
 // ---- helpers ---------------------------------------------------------------
 const KEY = "5b0c3a7e-8d2f-4a61-9f3c-2e7b1d4c9a10"
@@ -263,6 +264,13 @@ describe("createOrder — rejections", () => {
   it("returns RATE_LIMITED when over budget", async () => {
     state.rateLimited = true
     expect(await createOrder(input())).toMatchObject({ success: false, error: "RATE_LIMITED" })
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it("limits per IP (loose) and per normalized phone (tight)", async () => {
+    await createOrder(input())
+    expect(assertRateLimit).toHaveBeenCalledWith("order", "127.0.0.1")
+    expect(assertRateLimit).toHaveBeenCalledWith("order-phone", "+250781234567")
   })
 })
 
@@ -273,8 +281,11 @@ describe("createOrder — idempotency", () => {
     if (!first.success) return
     state.existingByKey.set(KEY, { number: first.data.number, publicToken: first.data.token })
 
+    vi.mocked(assertRateLimit).mockClear()
+    state.rateLimited = true // a retry of an existing order never burns budget
     const second = await createOrder(input())
     expect(second).toEqual(first)
+    expect(assertRateLimit).not.toHaveBeenCalled()
     expect(db.$transaction).toHaveBeenCalledTimes(1)
     expect(state.committed.filter(([k]) => k === "order.create")).toHaveLength(1)
   })

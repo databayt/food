@@ -17,7 +17,7 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
 
   return (
     <>
-      <SiteHeader lang={lang} isOpen={restaurant.isOpen} openLabel={dict.common.open} closedLabel={dict.common.closed} />
+      <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} isOpen={restaurant.isOpen} openLabel={dict.common.open} closedLabel={dict.common.closed} />
       <main id="main-content" className="pb-32">
         <div className="mx-auto max-w-5xl px-4 pb-4 pt-6">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-4xl">{dict.order.heading}</h1>
