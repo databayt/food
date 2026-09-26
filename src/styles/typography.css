@@ -1,0 +1,106 @@
+/* Typography System - Inspired by shadcn/ui */
+@layer base {
+  /* Headings */
+  h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+  }
+
+  h2 {
+    @apply scroll-m-20 text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight leading-tight first:mt-0;
+  }
+
+  h3 {
+    @apply scroll-m-20 text-xl sm:text-2xl lg:text-4xl font-semibold tracking-tight leading-tight;
+  }
+
+  h4 {
+    @apply scroll-m-20 text-xl font-semibold tracking-tight;
+  }
+
+  h5 {
+    @apply scroll-m-20 text-base font-semibold tracking-tight leading-tight;
+  }
+
+  h6 {
+    @apply scroll-m-20 text-xs font-semibold tracking-tight;
+  }
+
+  /* Paragraph */
+  p {
+    @apply leading-6 text-muted-foreground;
+  }
+
+  /* Blockquote */
+  /* blockquote {
+    @apply mt-6 border-l-2 pl-6 italic;
+  } */
+
+  /* Lists */
+  /* ul {
+    @apply my-6 ml-6 list-disc [&>li]:mt-2;
+  } */
+
+  ol {
+    @apply my-6 ms-6 list-decimal [&>li]:mt-2;
+  }
+
+  /* Inline code */
+  code {
+    @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+  }
+
+  /* Tables — scoped to the shadcn `<Table>` component (data-slot="table")
+     so these styles don't leak onto react-day-picker's calendar table or
+     any other third-party table. Previously the bare `tr { border-b }` and
+     `td { p-4 }` rules drew hairline dividers under every calendar row and
+     gave each day cell 16px of padding, making the calendar look like a
+     spreadsheet instead of a date picker. */
+  table[data-slot="table"] {
+    @apply w-full;
+  }
+
+  table[data-slot="table"] thead {
+    @apply [&_tr]:border-b;
+  }
+
+  table[data-slot="table"] tbody {
+    @apply [&_tr:last-child]:border-0;
+  }
+
+  table[data-slot="table"] tr {
+    @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+  }
+
+  table[data-slot="table"] th {
+    @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+  }
+
+  table[data-slot="table"] td {
+    @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
+  }
+
+  /* Links */
+  a {
+    @apply font-medium text-foreground hover:text-foreground/80;
+  }
+
+  /* Small text */
+  small {
+    @apply text-sm font-medium leading-none;
+  }
+
+  /* Large text */
+  .lead {
+    @apply text-xl text-muted-foreground;
+  }
+
+  /* Display text - for very large elements like prices */
+  .display {
+    @apply text-6xl font-bold;
+  }
+
+  /* Muted text */
+  .muted {
+    @apply text-sm text-muted-foreground;
+  }
+} 

@@ -1,0 +1,12 @@
+// Charles Burgers — Prisma schema entry.
+// Datasource URL lives in prisma.config.ts (Prisma 7); models live in
+// prisma/models/*.prisma. Money is always Int whole Rwandan francs (RWF has
+// no minor unit, ISO 4217 exponent 0) — never Float.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}

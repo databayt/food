@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Thmanyah fonts — license forbids redistribution; fetched by scripts/fetch-thmanyah.mjs
+/src/fonts/thmanyah/
+
+# env: only the example is committed
+!.env.example
+
+# test output
+/test-results/
+/playwright-report/
+/playwright/.auth/
+/coverage/

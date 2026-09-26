@@ -1,0 +1,154 @@
+// Orders. Every row below Order is an immutable order-time snapshot: menu
+// edits never rewrite history. Totals are computed server-side only.
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum FulfillmentType {
+  PICKUP
+  DELIVERY
+}
+
+enum PaymentMethod {
+  CASH
+  MOMO
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  phone       String   @unique // E.164, e.g. +250794000095
+  name        String
+  lastOrderAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  orders Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id             String          @id @default(cuid())
+  /// Human-friendly number shown as "#1042". Sequence restarts at 1001.
+  number         Int             @unique @default(autoincrement())
+  /// Unguessable token for the guest tracking URL.
+  publicToken    String          @unique
+  /// Client-generated per checkout attempt; a retry returns the same order.
+  idempotencyKey String          @unique
+  status         OrderStatus     @default(NEW)
+  fulfillment    FulfillmentType
+  locale         String          @default("en")
+
+  customerId      String
+  customerName    String
+  customerPhone   String
+  deliveryAddress String?
+  note            String?
+
+  subtotal    Int
+  deliveryFee Int @default(0)
+  total       Int
+
+  confirmedAt  DateTime?
+  preparingAt  DateTime?
+  readyAt      DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  customer Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items    OrderItem[]
+  payment  Payment?
+  history  OrderStatusHistory[]
+
+  @@index([status, createdAt])
+  @@index([customerPhone])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  menuItemId     String?
+  /// Localized names at order time: { en, rw, ar }.
+  names          Json
+  unitPrice      Int
+  quantity       Int
+  modifiersTotal Int     @default(0)
+  lineTotal      Int
+  note           String?
+  sortOrder      Int     @default(0)
+
+  order     Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem  MenuItem?           @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  modifiers OrderItemModifier[]
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderItemModifier {
+  id               String  @id @default(cuid())
+  orderItemId      String
+  modifierOptionId String?
+  groupNames       Json
+  optionNames      Json
+  price            Int
+
+  orderItem OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  option    ModifierOption? @relation(fields: [modifierOptionId], references: [id], onDelete: SetNull)
+
+  @@index([orderItemId])
+  @@map("order_item_modifiers")
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  orderId      String        @unique
+  method       PaymentMethod
+  status       PaymentStatus @default(PENDING)
+  amount       Int
+  reference    String?
+  paidAt       DateTime?
+  refundedAt   DateTime?
+  recordedById String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  order      Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  recordedBy User? @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+/// Audit trail: one row per order-status change and per payment event.
+model OrderStatusHistory {
+  id        String       @id @default(cuid())
+  orderId   String
+  from      OrderStatus?
+  to        OrderStatus?
+  event     String       @default("STATUS") // STATUS | PAYMENT_PAID | PAYMENT_REFUNDED
+  actorId   String?
+  note      String?
+  createdAt DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}

@@ -1,0 +1,24 @@
+// Single-restaurant settings. One row with id "default".
+
+model Restaurant {
+  id              String   @id @default("default")
+  name            String   @default("Charles Burgers")
+  legalName       String?
+  logoUrl         String?
+  phone           String?
+  whatsappNumber  String?
+  momoCode        String?
+  tiktok          String?
+  address         String?
+  isOpen          Boolean  @default(true)
+  pickupEnabled   Boolean  @default(true)
+  deliveryEnabled Boolean  @default(true)
+  deliveryFee     Int      @default(0)
+  cashEnabled     Boolean  @default(true)
+  momoEnabled     Boolean  @default(true)
+  /// Featured printed-menu photos: [{ src, width, height, alt }]
+  menuImages      Json     @default("[]")
+  updatedAt       DateTime @updatedAt
+
+  @@map("restaurants")
+}

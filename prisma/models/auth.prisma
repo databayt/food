@@ -1,0 +1,34 @@
+// Staff accounts only — customers order as guests and never sign in.
+
+enum UserRole {
+  ADMIN
+  CASHIER
+  KITCHEN
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(CASHIER)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  statusChanges OrderStatusHistory[]
+  paymentsTaken Payment[]
+
+  @@map("users")
+}
+
+// Postgres fallback for rate limiting when Upstash is not configured.
+model RateLimitCounter {
+  key       String   @id
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("rate_limit_counters")
+}

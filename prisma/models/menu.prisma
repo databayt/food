@@ -1,0 +1,135 @@
+// Menu catalogue. Names/descriptions live in per-locale translation rows so
+// staff can edit en / rw / ar independently; missing locales fall back to en.
+
+enum MenuSource {
+  PHOTO // verified against the printed menu photographs
+  STAFF // added or edited by staff in the admin
+}
+
+model MenuCategory {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations MenuCategoryTranslation[]
+  items        MenuItem[]
+
+  @@index([sortOrder])
+  @@map("menu_categories")
+}
+
+model MenuCategoryTranslation {
+  id         String       @id @default(cuid())
+  categoryId String
+  locale     String
+  name       String
+  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@map("menu_category_translations")
+}
+
+model MenuItem {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  categoryId  String
+  price       Int
+  imageUrl    String?
+  isAvailable Boolean    @default(true)
+  isArchived  Boolean    @default(false)
+  isNew       Boolean    @default(false)
+  sortOrder   Int        @default(0)
+  source      MenuSource @default(STAFF)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  category       MenuCategory            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  translations   MenuItemTranslation[]
+  modifierGroups MenuItemModifierGroup[]
+  orderItems     OrderItem[]
+
+  @@index([categoryId, sortOrder])
+  @@map("menu_items")
+}
+
+model MenuItemTranslation {
+  id          String   @id @default(cuid())
+  itemId      String
+  locale      String
+  name        String
+  description String?
+  item        MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, locale])
+  @@map("menu_item_translations")
+}
+
+model ModifierGroup {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  minSelect Int      @default(0)
+  maxSelect Int      @default(1)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations ModifierGroupTranslation[]
+  options      ModifierOption[]
+  items        MenuItemModifierGroup[]
+
+  @@map("modifier_groups")
+}
+
+model ModifierGroupTranslation {
+  id      String        @id @default(cuid())
+  groupId String
+  locale  String
+  name    String
+  group   ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, locale])
+  @@map("modifier_group_translations")
+}
+
+model MenuItemModifierGroup {
+  itemId    String
+  groupId   String
+  sortOrder Int           @default(0)
+  item      MenuItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  group     ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, groupId])
+  @@map("menu_item_modifier_groups")
+}
+
+model ModifierOption {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  groupId     String
+  price       Int      @default(0)
+  isAvailable Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  group          ModifierGroup               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  translations   ModifierOptionTranslation[]
+  orderModifiers OrderItemModifier[]
+
+  @@index([groupId, sortOrder])
+  @@map("modifier_options")
+}
+
+model ModifierOptionTranslation {
+  id       String         @id @default(cuid())
+  optionId String
+  locale   String
+  name     String
+  option   ModifierOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, locale])
+  @@map("modifier_option_translations")
+}
