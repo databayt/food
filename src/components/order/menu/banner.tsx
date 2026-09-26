@@ -39,14 +39,14 @@ export function MenuBanner({
           className="pointer-events-none absolute -end-6 -bottom-8 size-[112px] rotate-[-8deg] object-contain opacity-95 sm:end-10 sm:bottom-auto sm:size-[168px] sm:rotate-0"
         />
 
-        <div className="relative min-w-0 max-w-[13ch] sm:max-w-[420px]">
+        <div className="relative min-w-0 max-w-[22ch] sm:max-w-[420px]">
           <h1 className="text-3xl font-light leading-[1.3] text-balance text-brand-ink sm:text-4xl lg:text-[38px]">
             {after === undefined ? (
               t.title
             ) : (
               <>
                 {before}
-                <strong className="font-bold">{t.mark}</strong>
+                <strong className="block font-bold">{t.mark}</strong>
                 {after}
               </>
             )}
