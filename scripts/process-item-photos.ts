@@ -26,7 +26,37 @@ export const ITEM_PHOTOS: Record<string, string> = {
     "c8026c7c-5abf-4fd9-953e-4d7b7acd938a-removebg-preview.png",
   "classic-chicken-burger-fries":
     "5318839a-d7a9-489a-9e33-0116b4fddc33__1_-removebg-preview.png",
+  "double-chicken-burger": "image-removebg-preview-8.png",
+  "double-chicken-burger-fries": "image-removebg-preview-9.png",
+  "special-charles-burger": "image-removebg-preview-11.png",
+  "soft-drink": "image-removebg-preview-5.png",
+  "cheese-extra": "image-removebg-preview-6.png",
+  "sauce-extra": "image-removebg-preview-7.png",
+  "fries-extra": "image-removebg-preview-12.png",
 };
+
+/**
+ * Menu order from the Databayt Community Figma sheet (node 1346:7), read
+ * left-to-right, top-to-bottom. Meals are not on that sheet and follow last.
+ */
+export const MENU_ORDER = [
+  "classic-beef-burger",
+  "classic-chicken-burger",
+  "classic-beef-burger-fries",
+  "classic-chicken-burger-fries",
+  "double-beef-burger",
+  "double-beef-burger-fries",
+  "double-chicken-burger",
+  "double-chicken-burger-fries",
+  "special-charles-burger",
+  "soft-drink",
+  "cheese-extra",
+  "sauce-extra",
+  "fries-extra",
+  "beef-pilau",
+  "chicken-and-fries",
+  "chicken-pilau",
+] as const;
 
 const SOURCE_DIR = process.argv[2] ?? join(homedir(), "Downloads");
 const OUT_DIR = join(process.cwd(), "public", "items");

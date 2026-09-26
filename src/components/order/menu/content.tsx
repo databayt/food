@@ -16,9 +16,9 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
   const canOrder = restaurant.isOpen
 
   return (
-    <>
-      <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} isOpen={restaurant.isOpen} openLabel={dict.common.open} closedLabel={dict.common.closed} />
-      <main id="main-content" className="min-h-dvh bg-muted pb-32">
+    <div className="min-h-dvh bg-muted">
+      <SiteHeader lang={lang} logoUrl={restaurant.logoUrl} />
+      <main id="main-content" className="pb-32">
         <MenuBanner dict={dict} isOpen={restaurant.isOpen} whatsappNumber={restaurant.whatsappNumber} />
         <RecentOrders lang={lang} menu={menu} canOrder={canOrder} />
         <MenuBoard menu={menu} canOrder={canOrder} />
@@ -34,6 +34,6 @@ export async function OrderMenuContent({ lang }: { lang: Locale }) {
         </footer>
       </main>
       <CartBar lang={lang} menu={menu} />
-    </>
+    </div>
   )
 }

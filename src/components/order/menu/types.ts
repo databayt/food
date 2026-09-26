@@ -22,6 +22,7 @@ export type MenuItemView = {
   imageUrl: string | null
   isAvailable: boolean
   isNew: boolean
+  sortOrder: number
   modifierGroups: MenuModifierGroup[]
 }
 

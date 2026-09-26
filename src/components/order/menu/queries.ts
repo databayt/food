@@ -60,6 +60,7 @@ export async function getMenu(locale: Locale): Promise<MenuView> {
               imageUrl: item.imageUrl,
               isAvailable: item.isAvailable,
               isNew: item.isNew,
+              sortOrder: item.sortOrder,
               modifierGroups: item.modifierGroups.map(({ group }) => ({
                 id: group.id,
                 name: pickTranslation(group.translations, locale)?.name ?? group.slug,

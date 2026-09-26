@@ -12,7 +12,7 @@
 import "dotenv/config"
 
 import { db } from "../src/lib/db"
-import { ITEM_PHOTOS } from "./process-item-photos"
+import { ITEM_PHOTOS, MENU_ORDER } from "./process-item-photos"
 
 type Seed = {
   slug: string
@@ -150,7 +150,7 @@ async function main() {
         price: item.price,
         imageUrl: item.slug in ITEM_PHOTOS ? `/items/${item.slug}.webp` : null,
         isNew: item.isNew ?? false,
-        sortOrder: index * 10,
+        sortOrder: ((MENU_ORDER as readonly string[]).indexOf(item.slug) + 1 || index + 20) * 10,
         source: "PHOTO",
         translations: {
           create: { locale: "en", name: item.name, description: item.description ?? null },

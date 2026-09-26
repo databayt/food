@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
  */
 function HeaderGhost() {
   return (
-    <div className="sticky top-0 z-40 h-14 border-b bg-background">
+    <div className="h-14">
       <div className="mx-auto flex h-full max-w-5xl items-center gap-3 px-4">
         <Skeleton className="size-8 rounded-full" />
         <Skeleton className="h-4 w-32" />

@@ -26,7 +26,9 @@ export function MenuBoard({
   const [sheetItem, setSheetItem] = useState<MenuItemView | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const items = menu.categories.flatMap((c) => c.items);
+  // One grid in the menu's own order (sortOrder is global — see
+  // scripts/process-item-photos.ts MENU_ORDER); category order breaks ties.
+  const items = menu.categories.flatMap((c) => c.items).sort((a, b) => a.sortOrder - b.sortOrder);
 
   // Hydration marker: interactive from here on (used by slow-network e2e).
   useEffect(() => {
@@ -77,10 +79,15 @@ export function MenuBoard({
   );
 }
 
+/** Decorative corner badges from the menu design (Figma node 1355:312). */
+const ITEM_BADGES: Record<string, string> = {
+  "special-charles-burger": "/items/special-offer.svg",
+};
+
 /**
  * White card with the picture and text inside it (Apple store product card):
- * transparent cut-out on white, a small "New" / "Sold out" label, the name,
- * a muted line and the price. No hover zoom; the whole card is the tap target.
+ * transparent cut-out on white, a small "New" / "Sold out" label, the name
+ * and the price. No hover zoom; the whole card is the tap target.
  */
 function MenuItemCard({
   item,
@@ -95,6 +102,7 @@ function MenuItemCard({
 }) {
   const dict = useDictionary();
   const orderable = canOrder && item.isAvailable;
+  const badge = ITEM_BADGES[item.slug];
 
   return (
     <button
@@ -112,26 +120,37 @@ function MenuItemCard({
       )}
     >
       <span className="relative block aspect-square w-full">
-        {item.imageUrl ? (
+        <span className="absolute inset-[8%] block">
+          {item.imageUrl ? (
+            <Image
+              src={item.imageUrl}
+              alt=""
+              fill
+              priority={priority}
+              sizes="(max-width: 1024px) 40vw, 200px"
+              className="object-contain"
+            />
+          ) : (
+            <Image
+              src="/logo.png"
+              alt=""
+              width={96}
+              height={96}
+              className="absolute inset-0 m-auto size-1/2 object-contain"
+            />
+          )}
+        </span>
+        {badge && (
           <Image
-            src={item.imageUrl}
+            src={badge}
             alt=""
-            fill
-            priority={priority}
-            sizes="(max-width: 1024px) 45vw, 220px"
-            className="object-contain"
-          />
-        ) : (
-          <Image
-            src="/logo.png"
-            alt=""
-            width={96}
-            height={96}
-            className="absolute inset-0 m-auto size-[46%] object-contain"
+            width={56}
+            height={56}
+            className="absolute start-0 top-0 size-[30%] object-contain"
           />
         )}
       </span>
-      <span className="mt-3 flex flex-1 flex-col gap-0.5">
+      <span className="mt-2 flex flex-1 flex-col gap-0.5">
         {!item.isAvailable ? (
           <span className="text-xs font-medium text-muted-foreground">
             {dict?.order?.soldOut ?? "Sold out"}
@@ -147,11 +166,6 @@ function MenuItemCard({
         >
           {item.name}
         </span>
-        {item.description && (
-          <span dir="auto" className="truncate text-xs text-muted-foreground">
-            {item.description}
-          </span>
-        )}
         <Price
           amount={item.price}
           className="mt-auto pt-2 text-sm font-medium text-foreground"

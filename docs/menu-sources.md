@@ -10,25 +10,34 @@ page opens with a brand banner instead).
 | `IMG_2911.jpeg` | Meals menu (shot sideways) | price source |
 | `IMG_2909.jpeg` | Storefront sign at night | reference only (phone number) |
 
-## Item photos
+## Item photos and order
 
-Product shots supplied on 2026-09-26, background removed with remove.bg
-(`~/Downloads/<uuid>-removebg-preview.png`, 500px, not committed).
-`pnpm items:photos` trims them onto transparent squares as
-`public/items/<slug>.webp`; `pnpm items:attach` links them to items that have
-no photo yet (never overwriting one set in the admin).
+Order and imagery follow the Databayt Community Figma menu sheet
+(`PKFu1LTety9DcCKpC6UE4t`, node `1346:7`). Photos are background-removed PNGs
+(remove.bg, 500px) in `~/Downloads`, not committed; `pnpm items:photos` trims
+them onto transparent squares as `public/items/<slug>.webp`, and
+`pnpm items:attach` applies the photos and the sort order to a database
+(never replacing a photo staff uploaded).
 
-| Item | Source |
-|---|---|
-| Classic Beef Burger | `38ede194…` |
-| Double Beef Burger | `f685bec1…` |
-| Classic Chicken Burger | `63a2ae45…` |
-| Classic Beef Burger + Fries | `79979129…` |
-| Double Beef Burger + Fries | `c8026c7c…` |
-| Classic Chicken Burger + Fries | `5318839a…` |
+| # | Item | Source |
+|---|---|---|
+| 1 | Classic Beef Burger | `38ede194…-removebg-preview.png` |
+| 2 | Classic Chicken Burger | `63a2ae45…-removebg-preview.png` |
+| 3 | Classic Beef Burger + Fries | `79979129…-removebg-preview.png` |
+| 4 | Classic Chicken Burger + Fries | `5318839a…__1_-removebg-preview.png` |
+| 5 | Double Beef Burger | `f685bec1…-removebg-preview.png` |
+| 6 | Double Beef Burger + Fries | `c8026c7c…-removebg-preview.png` |
+| 7 | Double Chicken Burger | `image-removebg-preview-8.png` |
+| 8 | Double Chicken Burger + Fries | `image-removebg-preview-9.png` |
+| 9 | Special Charles Burger (+ "Special offer" badge, `22.svg`) | `image-removebg-preview-11.png` |
+| 10 | Fanta / Cola / Sprite | `image-removebg-preview-5.png` |
+| 11 | Cheese Extra | `image-removebg-preview-6.png` |
+| 12 | Sauce Extra | `image-removebg-preview-7.png` |
+| 13 | Fries Extra | `image-removebg-preview-12.png` |
 
-Items without a photo (meals, extras, drinks, Double Chicken, the Special)
-show the logo until staff upload one in Admin → Menu items.
+Beef Pilau, Chicken & Fries and Chicken Pilau (from the meals menu photo) are
+not on the Figma sheet; they follow at the end and show the logo until a
+photo is uploaded.
 
 ## Items
 
