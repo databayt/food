@@ -115,6 +115,9 @@ type CreateArgs = {
     total: number
     customerPhone: string
     deliveryAddress: string | null
+    deliveryLat: number | null
+    deliveryLng: number | null
+    deliveryAccuracy: number | null
     items: { create: Array<{ unitPrice: number; lineTotal: number; names: Record<string, string>; modifiers: { create: Array<{ price: number }> } }> }
     payment: { create: { method: string; status: string; amount: number } }
     history: { create: { to: string } }
@@ -169,6 +172,24 @@ describe("createOrder — server-side totals", () => {
     expect(order.deliveryFee).toBe(1000)
     expect(order.total).toBe(8000)
     expect(order.deliveryAddress).toBe("KG 11 Ave, near the market")
+  })
+
+  it("stores a shared delivery pin with its rounded accuracy", async () => {
+    const res = await createOrder(
+      input({ fulfillment: "DELIVERY", address: "KG 11 Ave, near the market", location: { lat: -1.9441, lng: 30.0619, accuracy: 24.6 } })
+    )
+    expect(res.success).toBe(true)
+    expect(committedOrder()).toMatchObject({ deliveryLat: -1.9441, deliveryLng: 30.0619, deliveryAccuracy: 25 })
+  })
+
+  it("delivers without a pin — the address alone is enough", async () => {
+    await createOrder(input({ fulfillment: "DELIVERY", address: "KG 11 Ave, near the market" }))
+    expect(committedOrder()).toMatchObject({ deliveryLat: null, deliveryLng: null, deliveryAccuracy: null })
+  })
+
+  it("never stores a pin on a pickup order", async () => {
+    await createOrder(input({ fulfillment: "PICKUP", location: { lat: -1.9441, lng: 30.0619, accuracy: 10 } }))
+    expect(committedOrder()).toMatchObject({ deliveryLat: null, deliveryLng: null, deliveryAccuracy: null })
   })
 
   it("snapshots localized names for every locale", async () => {
@@ -236,6 +257,17 @@ describe("createOrder — rejections", () => {
     const res = await createOrder(input({ fulfillment: "PICKUP", address: "should be dropped" }))
     expect(res.success).toBe(true)
     expect(committedOrder().deliveryAddress).toBeNull()
+  })
+
+  it.each([
+    ["latitude out of range", { lat: 91, lng: 30, accuracy: 10 }],
+    ["longitude out of range", { lat: -1.9, lng: 181, accuracy: 10 }],
+    ["a pin without a longitude", { lat: -1.9, accuracy: 10 }],
+    ["text coordinates", { lat: "-1.9", lng: "30.06", accuracy: 10 }],
+  ])("rejects a delivery pin with %s", async (_label, location) => {
+    const res = await createOrder(input({ fulfillment: "DELIVERY", address: "KG 11 Ave, near the market", location }))
+    expect(res).toMatchObject({ success: false, error: "VALIDATION" })
+    expect(db.$transaction).not.toHaveBeenCalled()
   })
 
   it("rejects an invalid phone number", async () => {

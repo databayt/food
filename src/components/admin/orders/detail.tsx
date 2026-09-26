@@ -5,6 +5,7 @@ import { localeConfig, type Locale } from "@/components/internationalization/con
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { interpolate } from "@/components/internationalization/interpolate"
 import { Button } from "@/components/ui/button"
+import { mapsUrl, orderPin } from "@/lib/order/location"
 import { formatLocalPhone } from "@/lib/order/phone"
 import { TIME_ZONE } from "@/lib/site"
 
@@ -15,6 +16,7 @@ type Detail = NonNullable<Awaited<ReturnType<typeof getOrderDetail>>>
 export function OrderDetail({ lang, dict, order }: { lang: Locale; dict: Dictionary; order: Detail }) {
   const fmt = new Intl.DateTimeFormat(localeConfig[lang].intl, { dateStyle: "medium", timeStyle: "short", timeZone: TIME_ZONE })
   const t = dict.admin.orders
+  const pin = orderPin(order)
   return (
     <main id="main-content" className="space-y-4">
       <Button asChild variant="ghost" size="sm" className="-ms-2 px-2">
@@ -36,6 +38,13 @@ export function OrderDetail({ lang, dict, order }: { lang: Locale; dict: Diction
           </p>
           <p>{dict.enums.fulfillment[order.fulfillment]}</p>
           {order.deliveryAddress && <p>{order.deliveryAddress}</p>}
+          {pin && (
+            <p>
+              <a href={mapsUrl(pin.lat, pin.lng)} target="_blank" rel="noopener noreferrer" className="font-medium underline underline-offset-2">
+                {dict.cashier.map}
+              </a>
+            </p>
+          )}
           {order.note && <p className="rounded bg-amber-50 px-2 py-1 text-amber-900">{order.note}</p>}
           {order.cancelReason && <p className="text-destructive">{order.cancelReason}</p>}
         </section>

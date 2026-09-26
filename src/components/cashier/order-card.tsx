@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Bike, Loader2, Phone, Store } from "lucide-react"
+import { Bike, Loader2, MapPin, Phone, Send, Store } from "lucide-react"
 import { toast } from "sonner"
 
+import { WhatsAppIcon } from "@/components/atom/icons"
 import { Price } from "@/components/atom/price"
 import { interpolate } from "@/components/internationalization/interpolate"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -23,11 +24,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { ActionResponse } from "@/lib/action-response"
+import { mapsUrl, orderPin } from "@/lib/order/location"
 import { formatLocalPhone } from "@/lib/order/phone"
 import { isTerminal, nextStatus } from "@/lib/order/status"
+import { whatsAppHref } from "@/lib/order/whatsapp"
+import { BRAND_NAME } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
-import { markPaid, refundPayment, transitionOrder } from "./actions"
+import { markDispatched, markPaid, refundPayment, transitionOrder } from "./actions"
+import { riderMessage, shareOnWhatsApp, type RiderTemplates } from "./rider-message"
 import type { CashierOrder } from "./types"
 
 const STATUS_TONE: Record<string, string> = {
@@ -79,6 +84,37 @@ export function OrderCard({
     )
 
   const paymentPending = order.payment?.status === "PENDING"
+  const isDelivery = order.fulfillment === "DELIVERY"
+  const active = !isTerminal(order.status)
+  const pin = orderPin(order)
+  // A READY delivery first goes out with the rider, then gets delivered.
+  const awaitingRider = isDelivery && order.status === "READY" && !order.dispatchedAt
+  const nextLabel =
+    next === "COMPLETED"
+      ? isDelivery
+        ? dict?.cashier?.delivered
+        : dict?.cashier?.pickedUp
+      : (dict?.cashier?.actions as Record<string, string> | undefined)?.[next ?? ""]
+
+  const dispatch = () =>
+    run(
+      () => markDispatched({ orderId: order.id }),
+      interpolate(dict?.cashier?.dispatched ?? "Order #{number} is on the way", { number: order.number })
+    )
+
+  const customerChat = whatsAppHref(
+    order.customerPhone,
+    interpolate(dict?.cashier?.customerMessage, { name: order.customerName, restaurant: BRAND_NAME, number: order.number })
+  )
+  const riderChat =
+    isDelivery && dict?.cashier?.rider
+      ? shareOnWhatsApp(
+          riderMessage(order, dict.cashier.rider as RiderTemplates, {
+            restaurant: BRAND_NAME,
+            methodLabel: order.payment ? (dict?.enums?.paymentMethod?.[order.payment.method] ?? order.payment.method) : "",
+          })
+        )
+      : null
 
   return (
     <article
@@ -130,6 +166,54 @@ export function OrderCard({
           <span className="font-medium text-foreground">{dict?.cashier?.address}:</span> {order.deliveryAddress}
         </p>
       )}
+      {isDelivery && !pin && active && <p className="mt-1 text-xs text-amber-700">{dict?.cashier?.noPin}</p>}
+      {order.dispatchedAt && order.status === "READY" && (
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-900" data-testid="on-the-way">
+          <Bike className="size-3.5" />
+          {dict?.cashier?.onTheWay} · <Elapsed since={order.dispatchedAt} now={now} className="text-sky-900" />
+        </p>
+      )}
+
+      {active && (
+        <div className="mt-3 flex gap-1.5">
+          {pin && (
+            <a
+              href={mapsUrl(pin.lat, pin.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border px-1 py-1.5 text-xs font-medium"
+              data-testid="order-map"
+            >
+              <MapPin className="size-4" />
+              {dict?.cashier?.map}
+            </a>
+          )}
+          {customerChat && (
+            <a
+              href={customerChat}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border px-1 py-1.5 text-xs font-medium"
+              data-testid="whatsapp-customer"
+            >
+              <WhatsAppIcon size={16} className="text-whatsapp" />
+              {dict?.cashier?.whatsapp}
+            </a>
+          )}
+          {riderChat && (
+            <a
+              href={riderChat}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border px-1 py-1.5 text-xs font-medium"
+              data-testid="send-to-rider"
+            >
+              <Send className="size-4" />
+              {dict?.cashier?.sendToRider}
+            </a>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 border-t pt-3">
         <OrderItems items={order.items} />
@@ -146,17 +230,24 @@ export function OrderCard({
         <Price amount={order.total} className="text-lg font-bold text-foreground" />
       </div>
 
-      {next && (
-        <Button
-          size="lg"
-          className="mt-3 h-12 w-full rounded-xl text-base"
-          disabled={pending}
-          onClick={advance}
-          data-testid="next-action"
-        >
-          {pending && <Loader2 className="animate-spin" />}
-          {(dict?.cashier?.actions as Record<string, string> | undefined)?.[next] ?? next}
+      {awaitingRider ? (
+        <Button size="lg" className="mt-3 h-12 w-full rounded-xl text-base" disabled={pending} onClick={dispatch} data-testid="dispatch-order">
+          {pending ? <Loader2 className="animate-spin" /> : <Bike />}
+          {dict?.cashier?.dispatch ?? "Out for delivery"}
         </Button>
+      ) : (
+        next && (
+          <Button
+            size="lg"
+            className="mt-3 h-12 w-full rounded-xl text-base"
+            disabled={pending}
+            onClick={advance}
+            data-testid="next-action"
+          >
+            {pending && <Loader2 className="animate-spin" />}
+            {nextLabel ?? next}
+          </Button>
+        )
       )}
 
       <div className="mt-2 flex flex-wrap gap-2">

@@ -65,7 +65,15 @@
     "decrease": "Decrease quantity",
     "increase": "Increase quantity",
     "instructions": "Special instructions",
-    "notes": { "noOnions": "No onions", "noTomato": "No tomato", "noLettuce": "No lettuce", "noSauce": "No sauce", "extraSpicy": "Extra spicy", "notSpicy": "Not spicy", "cutInHalf": "Cut in half" },
+    "notes": {
+      "noOnions": "No onions",
+      "noTomato": "No tomato",
+      "noLettuce": "No lettuce",
+      "noSauce": "No sauce",
+      "extraSpicy": "Extra spicy",
+      "notSpicy": "Not spicy",
+      "cutInHalf": "Cut in half"
+    },
     "addToOrder": "Add to order · {price}",
     "chooseOne": "Choose 1",
     "chooseUpTo": "Choose up to {max}",
@@ -116,7 +124,15 @@
     "placing": "Placing your order…",
     "remembered": "Your name and phone are saved on this device for next time.",
     "closed": "We're not taking orders right now.",
-    "noMethods": "Online ordering is paused. Please order on WhatsApp."
+    "noMethods": "Online ordering is paused. Please order on WhatsApp.",
+    "shareLocation": "Share my location",
+    "locating": "Finding your location…",
+    "locationAttached": "Location attached (±{meters} m)",
+    "locationAttachedPlain": "Location attached",
+    "locationHint": "Helps the rider find your door. Share it from the place you want the food delivered.",
+    "locationError": "We couldn't get your location. Describe the place in the address instead.",
+    "viewOnMap": "Check on map",
+    "removeLocation": "Remove"
   },
   "track": {
     "title": "Order #{number}",
@@ -127,9 +143,10 @@
       "CONFIRMED": "Confirmed. It's in the queue.",
       "PREPARING": "Your food is being prepared.",
       "READY_PICKUP": "Ready! Come and collect it.",
-      "READY_DELIVERY": "Ready. It's on its way soon.",
+      "READY_DELIVERY": "Ready. A rider is about to leave with it.",
       "COMPLETED": "Completed. Enjoy your meal!",
-      "CANCELLED": "This order was cancelled."
+      "CANCELLED": "This order was cancelled.",
+      "ON_THE_WAY": "On its way to you!"
     },
     "placedAt": "Placed at {time}",
     "items": "Items",
@@ -138,7 +155,16 @@
     "offline": "You're offline. Showing the last known status.",
     "notFound": "We couldn't find that order.",
     "notFoundHint": "Check the link, or order again from the menu.",
-    "needHelp": "Need help with this order?"
+    "needHelp": "Need help with this order?",
+    "onTheWay": "On the way",
+    "payTitle": "Pay with MTN MoMo",
+    "payAmount": "Amount: {price}",
+    "payCode": "Merchant code",
+    "payHint": "Send the amount to this code. The restaurant confirms your payment.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "pickupAt": "Pickup at",
+    "directions": "Directions"
   },
   "auth": {
     "title": "Staff sign in",
@@ -160,7 +186,10 @@
     "reconnecting": "Reconnecting…",
     "minutesAgo": "{minutes} min ago",
     "justNow": "Just now",
-    "items": "{count} items"
+    "items": "{count} items",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "soundHint": "Turn on to hear new orders"
   },
   "cashier": {
     "title": "Orders",
@@ -189,7 +218,28 @@
     "note": "Note",
     "updated": "Order #{number} updated",
     "paidDone": "Payment recorded",
-    "refundDone": "Refund recorded"
+    "refundDone": "Refund recorded",
+    "dispatch": "Out for delivery",
+    "dispatched": "Order #{number} is on the way",
+    "onTheWay": "On the way",
+    "delivered": "Delivered",
+    "pickedUp": "Picked up",
+    "map": "Map",
+    "whatsapp": "WhatsApp",
+    "sendToRider": "Send to rider",
+    "noPin": "No map pin — call to confirm the place.",
+    "customerMessage": "Hello {name}, this is {restaurant} about your order #{number}.",
+    "rider": {
+      "title": "{restaurant} — delivery #{number}",
+      "customer": "Customer: {name}",
+      "phone": "Phone: {phone}",
+      "address": "Address: {address}",
+      "map": "Map: {url}",
+      "items": "Items:",
+      "note": "Note: {note}",
+      "collect": "Collect: {amount} ({method})",
+      "paid": "Paid — collect nothing."
+    }
   },
   "kitchen": {
     "title": "Kitchen",
@@ -300,7 +350,8 @@
       "event": {
         "STATUS": "Status changed",
         "PAYMENT_PAID": "Payment recorded",
-        "PAYMENT_REFUNDED": "Refund recorded"
+        "PAYMENT_REFUNDED": "Refund recorded",
+        "DISPATCHED": "Out for delivery"
       },
       "byCustomer": "Customer",
       "previous": "Previous",

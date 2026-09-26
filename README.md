@@ -71,13 +71,27 @@ The production admin is `admin@charlesburgers.rw`; its password is Keychain `cf-
 - **Orders** snapshot item names (all locales), prices, modifiers and notes; menu edits never change history.
 - **Order creation** is one transaction, prices come only from the database, and an idempotency key makes double-submits return the same order.
 - **Status**: `NEW → CONFIRMED → PREPARING → READY → COMPLETED`, plus `CANCELLED`. Transitions are checked against the role table and the status the staff member saw. Payment status is separate.
-- **Live updates** are a visibility-aware poll (5 s staff, 10 s guests) — no realtime service.
+- **Delivery**: the guest types an address and can attach a map pin ("Share my location"). The cashier card opens the pin in Google Maps, messages the customer on WhatsApp, and sends the rider one WhatsApp message with address, pin, items and the amount to collect. "Out for delivery" stamps `dispatchedAt` (the status stays READY) and the guest sees "On the way"; "Delivered" completes it.
+- **Live updates** are a poll (5 s staff, 10 s guests) — no realtime service. Staff screens keep polling behind other tabs, chime on new orders and repeat the chime every 30 s while an order waits for confirmation.
 - **Privacy**: tracking pages use an unguessable token and never show phone or address; the kitchen query never reads them.
 
 ## Pending owner confirmations
 
 WhatsApp number, delivery fee, logo, TikTok handle spelling, and native-speaker
 review of Kinyarwanda and Arabic UI copy (`docs/translation-review.md`).
+
+Before taking real orders (all in Admin, no code):
+
+- **Staff accounts** — production has only the admin. Add a Cashier login for the
+  counter phone/tablet and a Kitchen login (Admin → Staff). A NEW order waits for
+  a cashier or admin to confirm it before the kitchen sees it.
+- **Pickup address** — the street address and landmark (Admin → Settings); guests
+  collecting an order see it with a Directions link. Today it reads "Kigali, Rwanda".
+- **Delivery fee** — 0 today, shown as "confirmed by the restaurant", so the stored
+  total excludes it and the rider message asks for the food total only. Set a flat
+  fee in Admin → Settings, or turn delivery off until one is agreed.
+- **MoMo** — the tracking page shows the merchant code and amount. A tap-to-dial
+  MoMoPay USSD code was left out until the owner confirms the exact string.
 
 ## References
 

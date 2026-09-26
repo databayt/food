@@ -18,3 +18,7 @@ export const MarkPaidSchema = z.object({
 export const RefundSchema = z.object({
   orderId: z.string().min(1).max(40),
 })
+
+export const DispatchSchema = z.object({
+  orderId: z.string().min(1).max(40),
+})

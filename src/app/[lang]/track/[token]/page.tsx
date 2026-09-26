@@ -48,6 +48,8 @@ export default async function TrackPage({ params, searchParams }: PageProps<"/[l
         token={token}
         initial={order}
         isNew={sp.new === "1"}
+        momoCode={restaurant.momoEnabled ? restaurant.momoCode : null}
+        pickup={{ name: restaurant.name, address: restaurant.address }}
         help={
           <WhatsAppFallback
             whatsappNumber={restaurant.whatsappNumber}

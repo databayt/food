@@ -7,7 +7,8 @@ import { db } from "@/lib/db"
 
 /**
  * Kitchen display data. The `select` IS the privacy boundary: customer name,
- * phone, address, payment and totals are never read for this screen.
+ * phone, address, payment and totals are never read for this screen. Pickup
+ * vs delivery is — the kitchen packs a delivery for the ride.
  */
 export async function getKitchenQueue(locale: Locale): Promise<KitchenOrder[]> {
   const orders = await db.order.findMany({
@@ -18,6 +19,7 @@ export async function getKitchenQueue(locale: Locale): Promise<KitchenOrder[]> {
       id: true,
       number: true,
       status: true,
+      fulfillment: true,
       createdAt: true,
       note: true,
       items: {

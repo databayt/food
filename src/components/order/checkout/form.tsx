@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, ArrowRight, Bike, Loader2, Store, Banknote, Smartphone } from "lucide-react"
+import { ArrowLeft, ArrowRight, Bike, Loader2, LocateFixed, MapPin, Store, Banknote, Smartphone, X } from "lucide-react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import type { RestaurantSettings } from "@/components/restaurant/queries"
+import { mapsUrl, type DeliveryPin } from "@/lib/order/location"
 import { cn } from "@/lib/utils"
 
 import { CartLines } from "../cart/cart-lines"
@@ -47,6 +48,7 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
   const subtotal = cartSubtotal(resolved)
   const [pending, startTransition] = useTransition()
   const [placed, setPlaced] = useState(false)
+  const [location, setLocation] = useState<DeliveryPin | null>(null)
   const Back = isRTL ? ArrowRight : ArrowLeft
   const errorText = (code?: string) => (code ? ((dict?.errors as Record<string, string> | undefined)?.[code] ?? code) : undefined)
 
@@ -101,6 +103,7 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
           idempotencyKey,
           locale: lang,
           ...values,
+          location: values.fulfillment === "DELIVERY" ? location : null,
           lines: lines.map(({ itemId, optionIds, quantity, note }) => ({ itemId, optionIds, quantity, note })),
         })
       } catch {
@@ -239,6 +242,7 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
                     )}
                   />
                 )}
+                {fulfillment === "DELIVERY" && <LocationPicker value={location} onChange={setLocation} />}
               </section>
             )}
 
@@ -341,6 +345,79 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
         </Form>
       )}
     </main>
+  )
+}
+
+/**
+ * Optional delivery pin. Kigali street addresses often aren't enough for a
+ * rider, so the guest can attach their current position; the cashier opens
+ * it in Google Maps. The typed address stays required.
+ */
+function LocationPicker({ value, onChange }: { value: DeliveryPin | null; onChange: (pin: DeliveryPin | null) => void }) {
+  const dict = useDictionary()
+  const t = dict?.checkout
+  const [state, setState] = useState<"idle" | "locating" | "error">("idle")
+
+  const locate = () => {
+    if (!("geolocation" in navigator)) {
+      setState("error")
+      return
+    }
+    setState("locating")
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        onChange({ lat: coords.latitude, lng: coords.longitude, accuracy: Number.isFinite(coords.accuracy) ? Math.round(coords.accuracy) : null })
+        setState("idle")
+      },
+      () => setState("error"),
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 }
+    )
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-emerald-600/40 bg-emerald-50 p-3 text-emerald-900" data-testid="location-attached">
+        <MapPin className="size-5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-emerald-900">
+            {value.accuracy != null
+              ? interpolate(t?.locationAttached ?? "Location attached (±{meters} m)", { meters: value.accuracy })
+              : (t?.locationAttachedPlain ?? "Location attached")}
+          </p>
+          <a
+            href={mapsUrl(value.lat, value.lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-emerald-800 underline underline-offset-2"
+          >
+            {t?.viewOnMap ?? "Check on map"}
+          </a>
+        </div>
+        <Button type="button" variant="ghost" size="sm" className="shrink-0 rounded-full" onClick={() => onChange(null)}>
+          <X />
+          {t?.removeLocation ?? "Remove"}
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Button
+        type="button"
+        variant="outline"
+        className="h-12 w-full rounded-xl text-base"
+        onClick={locate}
+        disabled={state === "locating"}
+        data-testid="share-location"
+      >
+        {state === "locating" ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+        {state === "locating" ? (t?.locating ?? "Finding your location…") : (t?.shareLocation ?? "Share my location")}
+      </Button>
+      <p className={cn("text-xs", state === "error" && "font-medium text-destructive")} role={state === "error" ? "alert" : undefined}>
+        {state === "error" ? t?.locationError : t?.locationHint}
+      </p>
+    </div>
   )
 }
 

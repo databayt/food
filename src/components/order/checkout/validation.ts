@@ -17,6 +17,13 @@ export const CartLineInputSchema = z.object({
   note: z.string().max(140, "TOO_LONG").default("").transform(sanitizeMultiline),
 })
 
+/** Optional delivery pin from the browser's geolocation — both coordinates or none. */
+export const DeliveryPinSchema = z.object({
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  accuracy: z.number().min(0).max(100_000).transform(Math.round).nullable().default(null),
+})
+
 export const CreateOrderSchema = z
   .object({
     idempotencyKey: z.uuid(),
@@ -35,6 +42,7 @@ export const CreateOrderSchema = z
     }),
     fulfillment: z.enum(["PICKUP", "DELIVERY"]),
     address: z.string().max(200, "TOO_LONG").optional().transform((v) => (v ? sanitizeInput(v) : "")),
+    location: DeliveryPinSchema.nullable().default(null),
     paymentMethod: z.enum(["CASH", "MOMO"]),
     note: z.string().max(280, "TOO_LONG").optional().transform((v) => (v ? sanitizeMultiline(v) : "")),
     lines: z.array(CartLineInputSchema).min(1, "EMPTY_CART").max(MAX_LINES, "TOO_LONG"),

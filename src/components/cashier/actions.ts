@@ -11,7 +11,7 @@ import { ROUTE_ROLES } from "@/routes"
 
 import { getCashierQueue } from "./queries"
 import type { CashierOrder } from "./types"
-import { MarkPaidSchema, RefundSchema, TransitionSchema } from "./validation"
+import { DispatchSchema, MarkPaidSchema, RefundSchema, TransitionSchema } from "./validation"
 
 class StaleStateError extends Error {}
 
@@ -73,6 +73,40 @@ export async function transitionOrder(input: unknown): Promise<ActionResponse<{ 
     return fail("GENERIC")
   }
   return ok({ status: to })
+}
+
+/**
+ * A delivery order left with the rider. The status stays READY (the food is
+ * done); `dispatchedAt` tells the guest it is on the way. Only once, and only
+ * for a READY delivery — the conditional write makes a double tap harmless.
+ */
+export async function markDispatched(input: unknown): Promise<ActionResponse<null>> {
+  const session = await getStaffSession(ROUTE_ROLES.cashier)
+  if (!session) return fail("FORBIDDEN")
+  if (await limited(session.user.id)) return fail("RATE_LIMITED")
+
+  const parsed = DispatchSchema.safeParse(input)
+  if (!parsed.success) return fail("VALIDATION")
+  const { orderId } = parsed.data
+
+  try {
+    await db.$transaction(async (tx) => {
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, status: "READY", fulfillment: "DELIVERY", dispatchedAt: null },
+        data: { dispatchedAt: new Date() },
+      })
+      if (updated.count !== 1) throw new StaleStateError()
+      await tx.orderStatusHistory.create({ data: { orderId, event: "DISPATCHED", actorId: session.user.id } })
+    })
+  } catch (error) {
+    if (error instanceof StaleStateError) {
+      const exists = await db.order.findUnique({ where: { id: orderId }, select: { id: true } })
+      return fail(exists ? "STALE_STATE" : "NOT_FOUND")
+    }
+    console.error("[markDispatched] failed", error)
+    return fail("GENERIC")
+  }
+  return ok(null)
 }
 
 /** Record a cash or MoMo payment (PENDING → PAID). Cashier/admin only. */

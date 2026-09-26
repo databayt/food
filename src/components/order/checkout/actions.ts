@@ -65,12 +65,13 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
     return fail("PAYMENT_METHOD_DISABLED")
   }
 
+  const isDelivery = data.fulfillment === "DELIVERY"
   const resolved = await resolveOrderLines(db, data.lines)
   if (!resolved.ok) return fail(resolved.error, { details: { itemIds: resolved.itemIds } })
 
   const totals = computeOrderTotals(
     resolved.lines.map((l) => ({ unitPrice: l.unitPrice, quantity: l.quantity, modifierPrices: l.modifiers.map((m) => m.price) })),
-    data.fulfillment === "DELIVERY" ? settings.deliveryFee : 0
+    isDelivery ? settings.deliveryFee : 0
   )
 
   try {
@@ -90,7 +91,10 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
           customerId: customer.id,
           customerName: data.name,
           customerPhone: data.phone,
-          deliveryAddress: data.fulfillment === "DELIVERY" ? data.address : null,
+          deliveryAddress: isDelivery ? data.address : null,
+          deliveryLat: isDelivery ? (data.location?.lat ?? null) : null,
+          deliveryLng: isDelivery ? (data.location?.lng ?? null) : null,
+          deliveryAccuracy: isDelivery ? (data.location?.accuracy ?? null) : null,
           note: data.note || null,
           subtotal: totals.subtotal,
           deliveryFee: totals.deliveryFee,

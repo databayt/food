@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { Loader2 } from "lucide-react"
+import { Bike, Loader2, Store } from "lucide-react"
 import { toast } from "sonner"
 
 import { ChefGlyph } from "@/components/atom/icons"
@@ -12,6 +12,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { Elapsed, LiveBadge } from "@/components/staff/elapsed"
 import { useLiveQueue } from "@/components/staff/live-queue"
 import { OrderItems } from "@/components/staff/order-items"
+import { SoundToggle } from "@/components/staff/sound"
 import { Button } from "@/components/ui/button"
 import { useNow } from "@/hooks/use-now"
 import { cn } from "@/lib/utils"
@@ -22,7 +23,9 @@ import { fetchKitchenQueue } from "./actions"
 export function KitchenContent({ lang, initial }: { lang: Locale; initial: KitchenOrder[] }) {
   const dict = useDictionary()
   const now = useNow()
-  const { orders, offline, fresh, acknowledge, refresh } = useLiveQueue(initial, () => fetchKitchenQueue(lang))
+  const { orders, offline, fresh, acknowledge, refresh } = useLiveQueue(initial, () => fetchKitchenQueue(lang), {
+    waiting: (list) => list.filter((o) => o.status === "CONFIRMED").length,
+  })
   const columns = [
     { status: "CONFIRMED" as const, title: dict?.kitchen?.toPrepare ?? "To prepare" },
     { status: "PREPARING" as const, title: dict?.kitchen?.preparing ?? "Preparing" },
@@ -32,7 +35,10 @@ export function KitchenContent({ lang, initial }: { lang: Locale; initial: Kitch
     <main id="main-content" className="mx-auto max-w-7xl px-4 py-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold sm:text-2xl lg:text-3xl">{dict?.kitchen?.title ?? "Kitchen"}</h1>
-        <LiveBadge offline={offline} />
+        <div className="flex items-center gap-2">
+          <SoundToggle />
+          <LiveBadge offline={offline} />
+        </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         {columns.map((col) => {
@@ -101,7 +107,19 @@ function KitchenTicket({
       <header className="mb-3 flex items-baseline justify-between gap-2">
         {/* i18n-exempt — order number token */}
         <h3 className="text-3xl font-black tabular-nums sm:text-3xl lg:text-3xl">#{order.number}</h3>
-        <Elapsed since={order.createdAt} now={now} className="text-sm" />
+        <div className="flex flex-col items-end gap-1">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold",
+              order.fulfillment === "DELIVERY" ? "bg-sky-100 text-sky-900" : "bg-muted text-foreground"
+            )}
+            data-testid="kitchen-fulfillment"
+          >
+            {order.fulfillment === "PICKUP" ? <Store className="size-4" /> : <Bike className="size-4" />}
+            {dict?.enums?.fulfillment?.[order.fulfillment]}
+          </span>
+          <Elapsed since={order.createdAt} now={now} className="text-sm" />
+        </div>
       </header>
       <OrderItems items={order.items} large />
       {order.note && <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-base font-medium text-amber-900">{order.note}</p>}

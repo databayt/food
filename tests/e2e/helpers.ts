@@ -12,6 +12,15 @@ export function testCustomer(label = "Guest"): string {
   return `E2E ${label} ${Date.now().toString(36)}${counter}`
 }
 
+/**
+ * A fresh MTN number per order. Orders are rate-limited per phone (5 per
+ * 10 min), so a suite that reused one number would trip its own limit.
+ */
+export function testPhone(): string {
+  const digits = String(Math.floor(Math.random() * 10_000_000)).padStart(7, "0")
+  return `078 ${digits.slice(0, 3)} ${digits.slice(3)}`
+}
+
 export async function staffPage(browser: Browser, role: keyof typeof TEST_STAFF): Promise<Page> {
   const context = await browser.newContext({ storageState: authFile(role) })
   return context.newPage()
@@ -34,30 +43,43 @@ export async function goToCheckout(page: Page, lang = "en") {
 
 export async function fillCheckout(
   page: Page,
-  opts: { name: string; phone?: string; fulfillment?: "PICKUP" | "DELIVERY"; address?: string; payment?: "CASH" | "MOMO" }
+  opts: {
+    name: string
+    phone?: string
+    fulfillment?: "PICKUP" | "DELIVERY"
+    address?: string
+    payment?: "CASH" | "MOMO"
+    /** Tap "Share my location" (grant geolocation on the context first). */
+    shareLocation?: boolean
+  }
 ) {
   await page.locator('input[name="name"]').fill(opts.name)
-  await page.locator('input[name="phone"]').fill(opts.phone ?? "078 123 4567")
+  await page.locator('input[name="phone"]').fill(opts.phone ?? testPhone())
   if (opts.fulfillment === "DELIVERY") {
     await page.getByTestId("fulfillment-DELIVERY").click()
     if (opts.address !== undefined) await page.locator('textarea[name="address"]').fill(opts.address)
+    if (opts.shareLocation) {
+      await page.getByTestId("share-location").click()
+      await expect(page.getByTestId("location-attached")).toBeVisible()
+    }
   }
   if (opts.payment === "MOMO") await page.getByTestId("paymentMethod-MOMO").click()
 }
 
 /** Full guest order from the menu; returns the confirmation number + token. */
 export async function placeOrder(page: Page, name: string, opts: Omit<Parameters<typeof fillCheckout>[1], "name"> = {}) {
+  const phone = opts.phone ?? testPhone()
   await page.goto("/en/order")
   await addBurgerWithCheese(page)
   await goToCheckout(page)
-  await fillCheckout(page, { name, ...opts })
+  await fillCheckout(page, { name, ...opts, phone })
   await page.getByTestId("place-order").click()
   await page.waitForURL(/\/en\/track\/[\w-]{22}\?new=1/)
   await expect(page.getByTestId("order-received")).toBeVisible()
   const heading = await page.getByTestId("order-number").innerText()
   const number = Number(heading.match(/(\d+)/)?.[1])
   const token = page.url().match(/track\/([\w-]{22})/)?.[1] ?? ""
-  return { number, token }
+  return { number, token, phone }
 }
 
 export async function ordersFor(name: string) {

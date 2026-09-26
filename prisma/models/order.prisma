@@ -50,11 +50,17 @@ model Order {
   fulfillment    FulfillmentType
   locale         String          @default("en")
 
-  customerId      String
-  customerName    String
-  customerPhone   String
-  deliveryAddress String?
-  note            String?
+  customerId       String
+  customerName     String
+  customerPhone    String
+  deliveryAddress  String?
+  /// Optional pin the guest shared at checkout (browser geolocation), so the
+  /// rider can navigate where Kigali street addresses run out.
+  deliveryLat      Float?
+  deliveryLng      Float?
+  /// Reported accuracy of the pin, in metres.
+  deliveryAccuracy Int?
+  note             String?
 
   subtotal    Int
   deliveryFee Int @default(0)
@@ -63,6 +69,8 @@ model Order {
   confirmedAt  DateTime?
   preparingAt  DateTime?
   readyAt      DateTime?
+  /// Delivery only: the rider left with the order (status stays READY).
+  dispatchedAt DateTime?
   completedAt  DateTime?
   cancelledAt  DateTime?
   cancelReason String?
@@ -141,7 +149,7 @@ model OrderStatusHistory {
   orderId   String
   from      OrderStatus?
   to        OrderStatus?
-  event     String       @default("STATUS") // STATUS | PAYMENT_PAID | PAYMENT_REFUNDED
+  event     String       @default("STATUS") // STATUS | DISPATCHED | PAYMENT_PAID | PAYMENT_REFUNDED
   actorId   String?
   note      String?
   createdAt DateTime     @default(now())

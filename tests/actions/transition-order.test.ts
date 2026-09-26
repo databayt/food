@@ -6,6 +6,8 @@ const state = vi.hoisted(() => ({
   paymentStatus: "PENDING" as string,
   history: [] as unknown[],
   exists: true,
+  fulfillment: "DELIVERY" as string,
+  dispatched: false,
 }))
 
 vi.mock("@/lib/auth", () => ({
@@ -24,11 +26,22 @@ vi.mock("@/components/cashier/queries", () => ({ getCashierQueue: vi.fn(async ()
 vi.mock("@/lib/db", () => {
   const tx = {
     order: {
-      updateMany: vi.fn(async ({ where, data }: { where: { status: string }; data: { status: string } }) => {
-        if (!state.exists || where.status !== state.orderStatus) return { count: 0 }
-        state.orderStatus = data.status
-        return { count: 1 }
-      }),
+      updateMany: vi.fn(
+        async ({
+          where,
+          data,
+        }: {
+          where: { status: string; fulfillment?: string; dispatchedAt?: null }
+          data: { status?: string; dispatchedAt?: Date }
+        }) => {
+          if (!state.exists || where.status !== state.orderStatus) return { count: 0 }
+          if (where.fulfillment && where.fulfillment !== state.fulfillment) return { count: 0 }
+          if (where.dispatchedAt === null && state.dispatched) return { count: 0 }
+          if (data.dispatchedAt) state.dispatched = true
+          if (data.status) state.orderStatus = data.status
+          return { count: 1 }
+        }
+      ),
     },
     payment: {
       updateMany: vi.fn(async ({ where, data }: { where: { status: string }; data: { status: string } }) => {
@@ -57,7 +70,7 @@ vi.mock("@/lib/db", () => {
   }
 })
 
-import { markPaid, refundPayment, transitionOrder } from "@/components/cashier/actions"
+import { markDispatched, markPaid, refundPayment, transitionOrder } from "@/components/cashier/actions"
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -66,6 +79,8 @@ beforeEach(() => {
   state.paymentStatus = "PENDING"
   state.history = []
   state.exists = true
+  state.fulfillment = "DELIVERY"
+  state.dispatched = false
 })
 
 describe("transitionOrder", () => {
@@ -148,5 +163,40 @@ describe("payments", () => {
     expect(state.paymentStatus).toBe("REFUNDED")
     state.paymentStatus = "PENDING"
     expect(await refundPayment({ orderId: "o1" })).toMatchObject({ error: "NOT_PAID" })
+  })
+})
+
+describe("markDispatched", () => {
+  it("sends a ready delivery out once, keeps it READY, and records who did it", async () => {
+    state.orderStatus = "READY"
+    expect(await markDispatched({ orderId: "o1" })).toEqual({ success: true, data: null })
+    expect(state.dispatched).toBe(true)
+    expect(state.orderStatus).toBe("READY")
+    expect(state.history[0]).toMatchObject({ event: "DISPATCHED", actorId: "staff-1" })
+    expect(await markDispatched({ orderId: "o1" })).toMatchObject({ error: "STALE_STATE" })
+    expect(state.history).toHaveLength(1)
+  })
+
+  it("refuses a delivery that isn't ready yet", async () => {
+    state.orderStatus = "PREPARING"
+    expect(await markDispatched({ orderId: "o1" })).toMatchObject({ error: "STALE_STATE" })
+    expect(state.dispatched).toBe(false)
+  })
+
+  it("refuses a pickup order", async () => {
+    state.orderStatus = "READY"
+    state.fulfillment = "PICKUP"
+    expect(await markDispatched({ orderId: "o1" })).toMatchObject({ error: "STALE_STATE" })
+  })
+
+  it("is for the cashier and admin, not the kitchen", async () => {
+    state.orderStatus = "READY"
+    state.role = "KITCHEN"
+    expect(await markDispatched({ orderId: "o1" })).toMatchObject({ error: "FORBIDDEN" })
+  })
+
+  it("returns NOT_FOUND for an unknown order", async () => {
+    state.exists = false
+    expect(await markDispatched({ orderId: "nope" })).toMatchObject({ error: "NOT_FOUND" })
   })
 })

@@ -8,6 +8,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { LiveBadge } from "@/components/staff/elapsed"
 import { useLiveQueue } from "@/components/staff/live-queue"
+import { SoundToggle } from "@/components/staff/sound"
 import { useNow } from "@/hooks/use-now"
 import { cn } from "@/lib/utils"
 
@@ -32,7 +33,10 @@ const COLUMNS: Column[] = [
 export function CashierContent({ lang, initial }: { lang: Locale; initial: CashierOrder[] }) {
   const dict = useDictionary()
   const now = useNow()
-  const { orders, offline, fresh, acknowledge, refresh } = useLiveQueue(initial, () => fetchCashierQueue(lang))
+  const { orders, offline, fresh, acknowledge, refresh } = useLiveQueue(initial, () => fetchCashierQueue(lang), {
+    waiting: (list) => list.filter((o) => o.status === "NEW").length,
+    remind: true,
+  })
   const [tab, setTab] = useState<Column["key"]>("NEW")
 
   const label = (key: Column["key"]) => (key === "DONE" ? (dict?.cashier?.done ?? "Done today") : (dict?.enums?.orderStatus?.[key] ?? key))
@@ -45,7 +49,10 @@ export function CashierContent({ lang, initial }: { lang: Locale; initial: Cashi
     <main id="main-content" className="mx-auto max-w-7xl px-4 py-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold sm:text-2xl lg:text-3xl">{dict?.cashier?.title ?? "Orders"}</h1>
-        <LiveBadge offline={offline} />
+        <div className="flex items-center gap-2">
+          <SoundToggle />
+          <LiveBadge offline={offline} />
+        </div>
       </div>
 
       {/* Phone tabs */}

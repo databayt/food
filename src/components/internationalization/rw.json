@@ -65,7 +65,15 @@
     "decrease": "Gabanya umubare",
     "increase": "Ongera umubare",
     "instructions": "Amabwiriza yihariye",
-    "notes": { "noOnions": "Nta bitunguru", "noTomato": "Nta nyanya", "noLettuce": "Nta salade", "noSauce": "Nta sosi", "extraSpicy": "Urusenda rwinshi", "notSpicy": "Nta rusenda", "cutInHalf": "Gukatamo kabiri" },
+    "notes": {
+      "noOnions": "Nta bitunguru",
+      "noTomato": "Nta nyanya",
+      "noLettuce": "Nta salade",
+      "noSauce": "Nta sosi",
+      "extraSpicy": "Urusenda rwinshi",
+      "notSpicy": "Nta rusenda",
+      "cutInHalf": "Gukatamo kabiri"
+    },
     "addToOrder": "Ongera muri komande · {price}",
     "chooseOne": "Hitamo 1",
     "chooseUpTo": "Hitamo kugeza kuri {max}",
@@ -116,7 +124,15 @@
     "placing": "Komande yawe iroherezwa…",
     "remembered": "Izina na nimero yawe bibikwa kuri iyi telefoni ubutaha.",
     "closed": "Ubu ntitwakira komande.",
-    "noMethods": "Gutumiza kuri interineti byahagaritswe by'agateganyo. Tumiza kuri WhatsApp."
+    "noMethods": "Gutumiza kuri interineti byahagaritswe by'agateganyo. Tumiza kuri WhatsApp.",
+    "shareLocation": "Sangiza aho uri",
+    "locating": "Turimo gushaka aho uri…",
+    "locationAttached": "Aho uri hongewemo (±{meters} m)",
+    "locationAttachedPlain": "Aho uri hongewemo",
+    "locationHint": "Bifasha umumotari kukugeraho. Bisangize uri aho ushaka ko ibiryo bikugeraho.",
+    "locationError": "Ntitwabashije kubona aho uri. Sobanura aho hantu muri aderesi.",
+    "viewOnMap": "Reba ku ikarita",
+    "removeLocation": "Kuraho"
   },
   "track": {
     "title": "Komande #{number}",
@@ -127,9 +143,10 @@
       "CONFIRMED": "Byemejwe. Iri ku murongo.",
       "PREPARING": "Ibiryo byawe birimo gutegurwa.",
       "READY_PICKUP": "Byateguwe! Ngwino ubifate.",
-      "READY_DELIVERY": "Byateguwe. Biri hafi kugezwa aho uri.",
+      "READY_DELIVERY": "Byateguwe. Umumotari agiye kubikuzanira.",
       "COMPLETED": "Byarangiye. Uryoherwe!",
-      "CANCELLED": "Iyi komande yahagaritswe."
+      "CANCELLED": "Iyi komande yahagaritswe.",
+      "ON_THE_WAY": "Biri mu nzira bikugana!"
     },
     "placedAt": "Yoherejwe saa {time}",
     "items": "Ibyo watumije",
@@ -138,7 +155,16 @@
     "offline": "Nta murandasi. Turerekana uko byari bimeze ubushize.",
     "notFound": "Ntitwabonye iyo komande.",
     "notFoundHint": "Genzura link, cyangwa wongere utumize kuri menu.",
-    "needHelp": "Ukeneye ubufasha kuri iyi komande?"
+    "needHelp": "Ukeneye ubufasha kuri iyi komande?",
+    "onTheWay": "Biri mu nzira",
+    "payTitle": "Ishyura na MTN MoMo",
+    "payAmount": "Amafaranga: {price}",
+    "payCode": "Kode y'umucuruzi",
+    "payHint": "Ohereza amafaranga kuri iyi kode. Resitora yemeza ubwishyu bwawe.",
+    "copy": "Koporora",
+    "copied": "Byakoporowe",
+    "pickupAt": "Aho kubifatira",
+    "directions": "Inzira"
   },
   "auth": {
     "title": "Kwinjira kw'abakozi",
@@ -160,7 +186,10 @@
     "reconnecting": "Birimo kongera guhuza…",
     "minutesAgo": "Hashize iminota {minutes}",
     "justNow": "Nonaha",
-    "items": "Ibintu {count}"
+    "items": "Ibintu {count}",
+    "soundOn": "Ijwi rirakora",
+    "soundOff": "Ijwi ntirikora",
+    "soundHint": "Fungura ijwi wumve komande nshya"
   },
   "cashier": {
     "title": "Komande",
@@ -189,7 +218,28 @@
     "note": "Icyitonderwa",
     "updated": "Komande #{number} yavuguruwe",
     "paidDone": "Kwishyura byanditswe",
-    "refundDone": "Gusubiza amafaranga byanditswe"
+    "refundDone": "Gusubiza amafaranga byanditswe",
+    "dispatch": "Umumotari yagiye",
+    "dispatched": "Komande #{number} iri mu nzira",
+    "onTheWay": "Biri mu nzira",
+    "delivered": "Byagejejweyo",
+    "pickedUp": "Byafashwe",
+    "map": "Ikarita",
+    "whatsapp": "WhatsApp",
+    "sendToRider": "Ohereza ku mumotari",
+    "noPin": "Nta kimenyetso ku ikarita — hamagara wemeze aho hantu.",
+    "customerMessage": "Muraho {name}, ni {restaurant} ku bijyanye na komande yawe #{number}.",
+    "rider": {
+      "title": "{restaurant} — kugeza komande #{number}",
+      "customer": "Umukiriya: {name}",
+      "phone": "Telefoni: {phone}",
+      "address": "Aderesi: {address}",
+      "map": "Ikarita: {url}",
+      "items": "Ibyatumijwe:",
+      "note": "Icyitonderwa: {note}",
+      "collect": "Akira: {amount} ({method})",
+      "paid": "Byishyuwe — ntacyo wakira."
+    }
   },
   "kitchen": {
     "title": "Igikoni",
@@ -300,7 +350,8 @@
       "event": {
         "STATUS": "Uko ihagaze byahindutse",
         "PAYMENT_PAID": "Kwishyura byanditswe",
-        "PAYMENT_REFUNDED": "Gusubiza amafaranga byanditswe"
+        "PAYMENT_REFUNDED": "Gusubiza amafaranga byanditswe",
+        "DISPATCHED": "Umumotari yagiye"
       },
       "byCustomer": "Umukiriya",
       "previous": "Ibibanza",

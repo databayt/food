@@ -52,6 +52,10 @@ export async function getCashierQueue(locale: Locale): Promise<CashierOrder[]> {
       customerName: true,
       customerPhone: true,
       deliveryAddress: true,
+      deliveryLat: true,
+      deliveryLng: true,
+      deliveryAccuracy: true,
+      dispatchedAt: true,
       note: true,
       total: true,
       cancelReason: true,
@@ -62,6 +66,7 @@ export async function getCashierQueue(locale: Locale): Promise<CashierOrder[]> {
   return orders.map((o) => ({
     ...o,
     createdAt: o.createdAt.toISOString(),
+    dispatchedAt: o.dispatchedAt?.toISOString() ?? null,
     items: toQueueItems(o.items, locale),
   }))
 }

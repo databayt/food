@@ -65,7 +65,15 @@
     "decrease": "إنقاص الكمية",
     "increase": "زيادة الكمية",
     "instructions": "تعليمات خاصة",
-    "notes": { "noOnions": "بدون بصل", "noTomato": "بدون طماطم", "noLettuce": "بدون خس", "noSauce": "بدون صوص", "extraSpicy": "حار أكثر", "notSpicy": "بدون حار", "cutInHalf": "مقسوم نصفين" },
+    "notes": {
+      "noOnions": "بدون بصل",
+      "noTomato": "بدون طماطم",
+      "noLettuce": "بدون خس",
+      "noSauce": "بدون صوص",
+      "extraSpicy": "حار أكثر",
+      "notSpicy": "بدون حار",
+      "cutInHalf": "مقسوم نصفين"
+    },
     "addToOrder": "أضف إلى الطلب · {price}",
     "chooseOne": "اختر 1",
     "chooseUpTo": "اختر حتى {max}",
@@ -116,7 +124,15 @@
     "placing": "جارٍ إرسال طلبك…",
     "remembered": "يُحفظ اسمك ورقمك على هذا الجهاز للمرة القادمة.",
     "closed": "لا نستقبل الطلبات حاليًا.",
-    "noMethods": "الطلب عبر الإنترنت متوقف مؤقتًا. اطلب عبر واتساب."
+    "noMethods": "الطلب عبر الإنترنت متوقف مؤقتًا. اطلب عبر واتساب.",
+    "shareLocation": "شارك موقعي",
+    "locating": "جارٍ تحديد موقعك…",
+    "locationAttached": "تم إرفاق الموقع (±{meters} م)",
+    "locationAttachedPlain": "تم إرفاق الموقع",
+    "locationHint": "يساعد السائق في الوصول إلى بابك. شاركه من المكان الذي تريد التوصيل إليه.",
+    "locationError": "تعذّر تحديد موقعك. صف المكان في العنوان بدلًا من ذلك.",
+    "viewOnMap": "عرض على الخريطة",
+    "removeLocation": "إزالة"
   },
   "track": {
     "title": "الطلب رقم {number}",
@@ -127,9 +143,10 @@
       "CONFIRMED": "تم التأكيد. طلبك في قائمة الانتظار.",
       "PREPARING": "يتم تحضير طعامك.",
       "READY_PICKUP": "جاهز! تعال واستلمه.",
-      "READY_DELIVERY": "جاهز. سيخرج للتوصيل قريبًا.",
+      "READY_DELIVERY": "جاهز. سيخرج السائق به قريبًا.",
       "COMPLETED": "اكتمل. بالهناء والشفاء!",
-      "CANCELLED": "تم إلغاء هذا الطلب."
+      "CANCELLED": "تم إلغاء هذا الطلب.",
+      "ON_THE_WAY": "طلبك في الطريق إليك!"
     },
     "placedAt": "أُرسل الساعة {time}",
     "items": "الأصناف",
@@ -138,7 +155,16 @@
     "offline": "أنت غير متصل. نعرض آخر حالة معروفة.",
     "notFound": "لم نعثر على هذا الطلب.",
     "notFoundHint": "تحقق من الرابط، أو اطلب مجددًا من القائمة.",
-    "needHelp": "تحتاج مساعدة بخصوص هذا الطلب؟"
+    "needHelp": "تحتاج مساعدة بخصوص هذا الطلب؟",
+    "onTheWay": "في الطريق",
+    "payTitle": "ادفع عبر MTN MoMo",
+    "payAmount": "المبلغ: {price}",
+    "payCode": "رمز التاجر",
+    "payHint": "حوّل المبلغ إلى هذا الرمز، وسيؤكد المطعم الدفع.",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "pickupAt": "مكان الاستلام",
+    "directions": "الاتجاهات"
   },
   "auth": {
     "title": "دخول الموظفين",
@@ -160,7 +186,10 @@
     "reconnecting": "جارٍ إعادة الاتصال…",
     "minutesAgo": "قبل {minutes} د",
     "justNow": "الآن",
-    "items": "{count} أصناف"
+    "items": "{count} أصناف",
+    "soundOn": "الصوت مفعّل",
+    "soundOff": "الصوت متوقف",
+    "soundHint": "فعّل الصوت لتسمع الطلبات الجديدة"
   },
   "cashier": {
     "title": "الطلبات",
@@ -189,7 +218,28 @@
     "note": "ملاحظة",
     "updated": "تم تحديث الطلب رقم {number}",
     "paidDone": "تم تسجيل الدفع",
-    "refundDone": "تم تسجيل الاسترداد"
+    "refundDone": "تم تسجيل الاسترداد",
+    "dispatch": "خرج للتوصيل",
+    "dispatched": "الطلب #{number} في الطريق",
+    "onTheWay": "في الطريق",
+    "delivered": "تم التوصيل",
+    "pickedUp": "تم الاستلام",
+    "map": "الخريطة",
+    "whatsapp": "WhatsApp",
+    "sendToRider": "أرسل للسائق",
+    "noPin": "لا يوجد موقع على الخريطة — اتصل لتأكيد المكان.",
+    "customerMessage": "مرحبًا {name}، معك {restaurant} بخصوص طلبك #{number}.",
+    "rider": {
+      "title": "{restaurant} — توصيل الطلب #{number}",
+      "customer": "العميل: {name}",
+      "phone": "الهاتف: {phone}",
+      "address": "العنوان: {address}",
+      "map": "الخريطة: {url}",
+      "items": "الأصناف:",
+      "note": "ملاحظة: {note}",
+      "collect": "حصّل: {amount} ({method})",
+      "paid": "مدفوع — لا تحصّل شيئًا."
+    }
   },
   "kitchen": {
     "title": "المطبخ",
@@ -300,7 +350,8 @@
       "event": {
         "STATUS": "تغيّرت الحالة",
         "PAYMENT_PAID": "سُجّل الدفع",
-        "PAYMENT_REFUNDED": "سُجّل الاسترداد"
+        "PAYMENT_REFUNDED": "سُجّل الاسترداد",
+        "DISPATCHED": "خرج للتوصيل"
       },
       "byCustomer": "العميل",
       "previous": "السابق",

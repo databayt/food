@@ -8,6 +8,7 @@ export type RestaurantSettings = {
   whatsappNumber: string | null
   momoCode: string | null
   tiktok: string | null
+  address: string | null
   logoUrl: string | null
   isOpen: boolean
   pickupEnabled: boolean
@@ -23,6 +24,7 @@ const DEFAULTS: RestaurantSettings = {
   whatsappNumber: null,
   momoCode: null,
   tiktok: null,
+  address: null,
   logoUrl: null,
   isOpen: false,
   pickupEnabled: true,
@@ -42,6 +44,7 @@ export async function getRestaurant(): Promise<RestaurantSettings> {
     whatsappNumber: row.whatsappNumber,
     momoCode: row.momoCode,
     tiktok: row.tiktok,
+    address: row.address,
     logoUrl: row.logoUrl,
     isOpen: row.isOpen,
     pickupEnabled: row.pickupEnabled,

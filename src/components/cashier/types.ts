@@ -18,6 +18,11 @@ export type CashierOrder = {
   customerName: string
   customerPhone: string
   deliveryAddress: string | null
+  deliveryLat: number | null
+  deliveryLng: number | null
+  deliveryAccuracy: number | null
+  /** Delivery only: when the rider left (the order stays READY until delivered). */
+  dispatchedAt: string | null
   note: string | null
   total: number
   cancelReason: string | null
@@ -30,6 +35,7 @@ export type KitchenOrder = {
   id: string
   number: number
   status: OrderStatus
+  fulfillment: FulfillmentType
   createdAt: string
   note: string | null
   items: QueueItem[]

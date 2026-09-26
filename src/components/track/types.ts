@@ -8,6 +8,8 @@ export type TrackedOrder = {
   firstName: string
   createdAt: string
   updatedAt: string
+  /** Delivery only: the rider left with the order. */
+  dispatchedAt: string | null
   subtotal: number
   deliveryFee: number
   total: number
