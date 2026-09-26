@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-import { Price } from "@/components/atom/price";
 import { useDictionary } from "@/components/internationalization/use-dictionary";
 import { cn } from "@/lib/utils";
 
+import { CardTitle } from "./card-title";
 import { ItemSheet } from "./item-sheet";
 import { SpecialOfferBadge } from "./special-offer-badge";
 import type { MenuItemView, MenuView } from "./types";
@@ -162,14 +162,7 @@ function MenuItemCard({
         ) : null}
         {/* Figma menu sheet: name and price as one run — "Classic Beef
             Burger - 3,000 R₣" — clamped to two lines, start-aligned. */}
-        <span
-          dir="auto"
-          className="line-clamp-2 text-sm font-medium leading-snug text-foreground"
-        >
-          {item.name}
-          {" - "}
-          <Price amount={item.price} />
-        </span>
+        <CardTitle name={item.name} price={item.price} />
       </span>
     </button>
   );

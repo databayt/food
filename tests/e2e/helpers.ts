@@ -19,7 +19,7 @@ export async function staffPage(browser: Browser, role: keyof typeof TEST_STAFF)
 
 /** Classic Beef Burger with Cheese via the item sheet. */
 export async function addBurgerWithCheese(page: Page) {
-  await page.locator('[data-item="classic-beef-burger"]').getByText("Classic Beef Burger").click()
+  await page.locator('[data-item="classic-beef-burger"]').click()
   await page.getByRole("dialog").getByText("Cheese", { exact: true }).click()
   await page.getByTestId("add-to-order").click()
   await expect(page.getByRole("dialog")).toBeHidden()
