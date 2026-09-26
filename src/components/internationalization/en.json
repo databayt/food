@@ -389,6 +389,7 @@
     "CANNOT_CHANGE_SELF": "You can't deactivate or demote yourself.",
     "UPLOAD_DISABLED": "Photo upload isn't set up. Paste a photo URL instead.",
     "UPLOAD_FAILED": "Upload failed. Please try again.",
-    "CATEGORY_NOT_EMPTY": "Move or archive its items first."
+    "CATEGORY_NOT_EMPTY": "Move or archive its items first.",
+    "INVALID_CREDENTIALS": "Wrong email or password."
   }
 }

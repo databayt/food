@@ -389,6 +389,7 @@
     "CANNOT_CHANGE_SELF": "Ntushobora guhagarika cyangwa kumanura konti yawe.",
     "UPLOAD_DISABLED": "Kohereza amafoto ntibirategurwa. Shyiramo link y'ifoto.",
     "UPLOAD_FAILED": "Kohereza byanze. Ongera ugerageze.",
-    "CATEGORY_NOT_EMPTY": "Banza wimure cyangwa ushyingure ibintu birimo."
+    "CATEGORY_NOT_EMPTY": "Banza wimure cyangwa ushyingure ibintu birimo.",
+    "INVALID_CREDENTIALS": "Imeri cyangwa ijambo ry'ibanga si byo."
   }
 }
