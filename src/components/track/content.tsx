@@ -138,7 +138,7 @@ export function TrackContent({
               <div className="min-w-0">
                 <p className="font-medium text-foreground">
                   <span className="tabular-nums">{item.quantity}× </span>
-                  {item.name}
+                  <bdi>{item.name}</bdi>
                 </p>
                 {item.modifiers.length > 0 && <p className="text-sm">{item.modifiers.join(", ")}</p>}
                 {item.note && <p className="text-sm italic">{item.note}</p>}

@@ -27,11 +27,15 @@ export function CartLines({ resolved, editable = true }: { resolved: ResolvedLin
             <div className="flex items-start justify-between gap-3">
               <p className="font-semibold text-foreground">
                 {editable ? null : <span className="tabular-nums">{line.quantity}× </span>}
-                {item?.name ?? "—"}
+                <bdi>{item?.name ?? "—"}</bdi>
               </p>
               <Price amount={lineTotal} className="font-semibold text-foreground" />
             </div>
-            {options.length > 0 && <p className="text-sm">{options.map((o) => o.name).join(", ")}</p>}
+            {options.length > 0 && (
+              <p dir="auto" className="text-start text-sm">
+                {options.map((o) => o.name).join(", ")}
+              </p>
+            )}
             {line.note && (
               <p className="text-sm italic">
                 {dict?.cart?.note ?? "Note"}: {line.note}

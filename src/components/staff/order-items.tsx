@@ -16,7 +16,9 @@ export function OrderItems({ items, large = false }: { items: QueueItem[]; large
             {item.quantity}
           </span>
           <div className="min-w-0">
-            <p className={cn("font-semibold leading-tight text-foreground", large && "text-lg")}>{item.name}</p>
+            <p dir="auto" className={cn("text-start font-semibold leading-tight text-foreground", large && "text-lg")}>
+              {item.name}
+            </p>
             {item.modifiers.length > 0 && (
               <p className={cn("text-muted-foreground", large ? "text-base" : "text-sm")}>+ {item.modifiers.join(", ")}</p>
             )}

@@ -80,7 +80,7 @@ export function MenuBoard({ menu, canOrder }: { menu: MenuView; canOrder: boolea
                 active === c.slug ? "border-foreground bg-foreground text-background" : "bg-background hover:bg-muted"
               )}
             >
-              {c.name}
+              <bdi>{c.name}</bdi>
             </a>
           ))}
         </div>
@@ -89,7 +89,7 @@ export function MenuBoard({ menu, canOrder }: { menu: MenuView; canOrder: boolea
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
         {menu.categories.map((category) => (
           <section key={category.id} id={`cat-${category.slug}`} aria-labelledby={`h-${category.slug}`} className="scroll-mt-32">
-            <h2 id={`h-${category.slug}`} className="mb-3 text-xl font-bold sm:text-2xl lg:text-2xl">
+            <h2 id={`h-${category.slug}`} dir="auto" className="mb-3 text-start text-xl font-bold sm:text-2xl lg:text-2xl">
               {category.name}
             </h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -138,7 +138,7 @@ function MenuItemCard({
         className="flex min-w-0 flex-1 flex-col items-start gap-1 text-start after:absolute after:inset-0 after:rounded-2xl disabled:cursor-default"
       >
         <span className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold leading-tight">{item.name}</span>
+          <span dir="auto" className="font-semibold leading-tight">{item.name}</span>
           {item.isNew && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
               {dict?.order?.new ?? "New"}
@@ -150,7 +150,11 @@ function MenuItemCard({
             </span>
           )}
         </span>
-        {item.description && <span className="line-clamp-2 text-sm text-muted-foreground">{item.description}</span>}
+        {item.description && (
+          <span dir="auto" className="line-clamp-2 text-sm text-muted-foreground">
+            {item.description}
+          </span>
+        )}
         <Price amount={item.price} className="mt-auto pt-1 font-semibold" />
       </button>
       <div className="relative flex shrink-0 flex-col items-end justify-between gap-2">

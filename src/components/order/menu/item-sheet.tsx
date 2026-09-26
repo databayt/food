@@ -85,8 +85,14 @@ function ItemForm({ item, onDone }: { item: MenuItemView; onDone: () => void }) 
   return (
     <div className="flex max-h-[92dvh] flex-col">
       <SheetHeader className="border-b p-4 pe-12 text-start">
-        <SheetTitle className="text-xl font-bold">{item.name}</SheetTitle>
-        {item.description ? <SheetDescription>{item.description}</SheetDescription> : <SheetDescription className="sr-only">{item.name}</SheetDescription>}
+        <SheetTitle dir="auto" className="text-start text-xl font-bold">
+          {item.name}
+        </SheetTitle>
+        {item.description ? (
+          <SheetDescription dir="auto" className="text-start">
+            {item.description}
+          </SheetDescription>
+        ) : <SheetDescription className="sr-only">{item.name}</SheetDescription>}
         <Price amount={item.price} className="text-base font-semibold text-foreground" />
       </SheetHeader>
 
@@ -94,7 +100,7 @@ function ItemForm({ item, onDone }: { item: MenuItemView; onDone: () => void }) 
         {item.modifierGroups.map((group) => (
           <fieldset key={group.id} className="space-y-2">
             <legend className="flex w-full items-center justify-between gap-2">
-              <span className="font-semibold">{group.name}</span>
+              <bdi className="font-semibold">{group.name}</bdi>
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-xs",
@@ -125,7 +131,7 @@ function ItemForm({ item, onDone }: { item: MenuItemView; onDone: () => void }) 
                       disabled={!option.isAvailable}
                       onChange={() => toggle(group, option.id)}
                     />
-                    <span className="flex-1">{option.name}</span>
+                    <bdi className="flex-1">{option.name}</bdi>
                     {!option.isAvailable ? (
                       <span className="text-xs text-muted-foreground">{dict?.order?.soldOut ?? "Sold out"}</span>
                     ) : option.price > 0 ? (
