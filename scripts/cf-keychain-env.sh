@@ -20,5 +20,5 @@ CONFIG
 
 for VAR in DATABASE_URL DIRECT_URL AUTH_SECRET UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_S3_BUCKET NEXT_PUBLIC_CDN_DOMAIN; do
   V=$(security find-generic-password -s "cf-food-$VAR" -w 2>/dev/null || true)
-  [[ -n "$V" ]] && printf '%s=%s\n' "$VAR" "$V"
+  if [[ -n "$V" ]]; then printf "%s=%s\n" "$VAR" "$V"; fi
 done
