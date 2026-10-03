@@ -17,6 +17,25 @@ import { cn } from "@/lib/utils";
 
 const DISMISS_KEY = "pwa-install-dismissed-at";
 const DISMISS_DAYS = 14;
+const VISITS_KEY = "pwa-visits";
+const VISIT_COUNTED = "pwa-visit-counted";
+/** First visit: let the menu make its impression before asking to install. */
+const FIRST_VISIT_DELAY_MS = 40_000;
+
+/** Visits so far, counting this one once per browser session. */
+function countVisit(): number {
+  try {
+    let n = Number(localStorage.getItem(VISITS_KEY) ?? 0);
+    if (!sessionStorage.getItem(VISIT_COUNTED)) {
+      n += 1;
+      localStorage.setItem(VISITS_KEY, String(n));
+      sessionStorage.setItem(VISIT_COUNTED, "1");
+    }
+    return n;
+  } catch {
+    return 1;
+  }
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -59,8 +78,9 @@ const serverSnapshot = () => null;
  * lit in brand green) drawn in HTML so it reads in the customer's language,
  * and a Continue that does only the native thing — the captured install
  * prompt on Android, the native share sheet on iPhone (Add to Home Screen is
- * one of its actions). Shown on phones that have not installed the app, once
- * per 14 days after a dismissal.
+ * one of its actions). Shown on phones that have not installed the app — on a
+ * return visit or after 40 s on the first — and once per 14 days after a
+ * dismissal.
  */
 export function InstallSheet() {
   const dict = useDictionary();
@@ -70,10 +90,23 @@ export function InstallSheet() {
     serverSnapshot,
   );
   const [hidden, setHidden] = useState(false);
+  // 2026-10-03: the sheet used to cover the menu on the very first visit —
+  // the first thing a restaurant owner saw on our showcase link. Now it waits
+  // for a return visit, or 40 s of browsing on the first.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!detected) return;
+    if (countVisit() >= 2) {
+      setReady(true);
+      return;
+    }
+    const t = setTimeout(() => setReady(true), FIRST_VISIT_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [detected]);
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
   );
-  const platform = hidden ? null : detected;
+  const platform = hidden || !ready ? null : detected;
 
   useEffect(() => {
     if (detected !== "android") return;

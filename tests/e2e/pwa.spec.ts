@@ -4,9 +4,17 @@ import { expect, test } from "@playwright/test"
 // dismissal for every other spec).
 test.use({ storageState: { cookies: [], origins: [] } })
 
-test("the install sheet opens on a phone's first visit and stays closed once dismissed", async ({ page, isMobile }) => {
+test("the install sheet waits on a first visit, opens on a return visit, stays closed once dismissed", async ({ page, context, isMobile }) => {
   test.skip(!isMobile, "the sheet is phone-only")
+  // First visit: the menu shows, no sheet over it.
   await page.goto("/en/order")
+  await expect(page.locator('[data-item="classic-beef-burger"]')).toBeVisible()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+
+  // Return visit (a new session in the same browser): the sheet opens.
+  const returning = await context.newPage()
+  await returning.goto("/en/order")
+  page = returning
   const sheet = page.getByRole("dialog")
   await expect(sheet).toBeVisible()
   await expect(sheet).toContainText("Add to Home Screen")
