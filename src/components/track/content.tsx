@@ -16,10 +16,14 @@ import { ORDER_FLOW, isTerminal } from "@/lib/order/status"
 import { TIME_ZONE } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
+import { MomoPanel } from "@/components/order/payment/momo-panel"
+
 import { getOrderStatus } from "./actions"
 import type { TrackedOrder } from "./types"
 
 const POLL_MS = 10_000
+/** While a MoMo PIN prompt is out, check faster so "Paid" lands right after the PIN. */
+const MOMO_POLL_MS = 4_000
 
 type Step = (typeof ORDER_FLOW)[number] | "ON_THE_WAY"
 const DELIVERY_STEPS: Step[] = ["NEW", "CONFIRMED", "PREPARING", "READY", "ON_THE_WAY", "COMPLETED"]
@@ -33,6 +37,7 @@ export function TrackContent({
   isNew,
   help,
   momoCode,
+  momoApi,
   pickup,
 }: {
   lang: Locale
@@ -41,25 +46,28 @@ export function TrackContent({
   isNew: boolean
   help: React.ReactNode
   momoCode: string | null
+  /** MTN Request-to-Pay is configured: send the PIN prompt instead of a code. */
+  momoApi: boolean
   pickup: { name: string; address: string | null }
 }) {
   const dict = useDictionary()
   const [order, setOrder] = useState(initial)
   const [offline, setOffline] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
+  const momoWaiting = order.payment?.status === "PENDING" && order.payment.attempt?.status === "PENDING"
 
-  useVisiblePoll(
-    async () => {
-      try {
-        const res = await getOrderStatus(token, lang)
-        if (res.success) setOrder(res.data)
-        setOffline(false)
-      } catch {
-        setOffline(true)
-      }
-    },
-    POLL_MS,
-    !isTerminal(order.status)
-  )
+  const refresh = async () => {
+    try {
+      const res = await getOrderStatus(token, lang)
+      if (res.success) setOrder(res.data)
+      setOffline(false)
+    } catch {
+      setOffline(true)
+    } finally {
+      setNow(Date.now())
+    }
+  }
+  useVisiblePoll(refresh, momoWaiting ? MOMO_POLL_MS : POLL_MS, !isTerminal(order.status) || momoWaiting)
 
   const cancelled = order.status === "CANCELLED"
   const isDelivery = order.fulfillment === "DELIVERY"
@@ -75,7 +83,9 @@ export function TrackContent({
       : order.status
   const hint = (dict?.track?.statusHint as Record<string, string> | undefined)?.[hintKey]
   const stepLabel = (step: Step) => (step === "ON_THE_WAY" ? dict?.track?.onTheWay : dict?.enums?.orderStatus?.[step]) ?? step
-  const payWithMomo = !cancelled && !!momoCode && order.payment?.method === "MOMO" && order.payment.status === "PENDING"
+  const isMomo = order.payment?.method === "MOMO"
+  const momoPush = isMomo && momoApi && (order.payment?.status === "PAID" || (!cancelled && order.payment?.status === "PENDING"))
+  const payWithMomo = !momoPush && !cancelled && !!momoCode && isMomo && order.payment?.status === "PENDING"
   const [copied, setCopied] = useState(false)
 
   // Buzz and retitle the tab when the food is ready or on its way.
@@ -99,6 +109,27 @@ export function TrackContent({
   }
   const time = new Intl.DateTimeFormat(localeConfig[lang].intl, { hour: "2-digit", minute: "2-digit", timeZone: TIME_ZONE }).format(
     new Date(order.createdAt)
+  )
+
+  const manualPay = (
+    <>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-amber-900">{dict?.track?.payCode}</p>
+          <p dir="ltr" className="text-start text-2xl font-extrabold tabular-nums tracking-wider text-amber-950" data-testid="momo-code">
+            {momoCode}
+          </p>
+        </div>
+        <Button type="button" variant="outline" size="sm" className="rounded-full bg-background" onClick={copyCode}>
+          {copied ? <Check /> : <Copy />}
+          {copied ? dict?.track?.copied : dict?.track?.copy}
+        </Button>
+      </div>
+      <p className="mt-2 font-semibold text-amber-950">
+        <Priced template={dict?.track?.payAmount ?? "Amount: {price}"} amount={order.total} />
+      </p>
+      <p className="mt-1 text-sm text-amber-900">{dict?.track?.payHint}</p>
+    </>
   )
 
   return (
@@ -167,23 +198,18 @@ export function TrackContent({
       {payWithMomo && (
         <section className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-950" data-testid="momo-pay">
           <h2 className="text-lg font-semibold text-amber-950 sm:text-lg lg:text-lg">{dict?.track?.payTitle}</h2>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm text-amber-900">{dict?.track?.payCode}</p>
-              <p dir="ltr" className="text-start text-2xl font-extrabold tabular-nums tracking-wider text-amber-950" data-testid="momo-code">
-                {momoCode}
-              </p>
-            </div>
-            <Button type="button" variant="outline" size="sm" className="rounded-full bg-background" onClick={copyCode}>
-              {copied ? <Check /> : <Copy />}
-              {copied ? dict?.track?.copied : dict?.track?.copy}
-            </Button>
-          </div>
-          <p className="mt-2 font-semibold text-amber-950">
-            <Priced template={dict?.track?.payAmount ?? "Amount: {price}"} amount={order.total} />
-          </p>
-          <p className="mt-1 text-sm text-amber-900">{dict?.track?.payHint}</p>
+          {manualPay}
         </section>
+      )}
+      {momoPush && order.payment && (
+        <MomoPanel
+          token={token}
+          total={order.total}
+          payment={order.payment}
+          now={now}
+          onChanged={refresh}
+          manual={momoCode ? <div data-testid="momo-pay">{manualPay}</div> : null}
+        />
       )}
 
       {!isDelivery && !cancelled && pickup.address && (

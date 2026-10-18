@@ -1,11 +1,25 @@
 import "server-only"
 
 import type { Locale } from "@/components/internationalization/config"
+import { refreshPendingAttempts } from "@/components/order/payment/settle"
 import { db } from "@/lib/db"
 import { snapshotName } from "@/lib/order/localize"
 import { TRACKING_TOKEN_PATTERN } from "@/lib/order/token"
 
 import type { TrackedOrder } from "./types"
+
+/** Re-read an in-flight MoMo prompt from MTN, so a missed callback still settles. */
+async function settlePendingMomo(token: string) {
+  try {
+    const pending = await db.payment.findFirst({
+      where: { order: { publicToken: token }, status: "PENDING", attempts: { some: { status: "PENDING" } } },
+      select: { id: true },
+    })
+    if (pending) await refreshPendingAttempts(pending.id)
+  } catch (error) {
+    console.error("[track] momo refresh failed", error)
+  }
+}
 
 /**
  * Look up an order by its unguessable tracking token. The `select` is the
@@ -13,6 +27,7 @@ import type { TrackedOrder } from "./types"
  */
 export async function getTrackedOrder(token: string, locale: Locale): Promise<TrackedOrder | null> {
   if (!TRACKING_TOKEN_PATTERN.test(token)) return null
+  await settlePendingMomo(token)
   const order = await db.order.findUnique({
     where: { publicToken: token },
     select: {
@@ -26,7 +41,14 @@ export async function getTrackedOrder(token: string, locale: Locale): Promise<Tr
       subtotal: true,
       deliveryFee: true,
       total: true,
-      payment: { select: { method: true, status: true } },
+      payment: {
+        select: {
+          method: true,
+          status: true,
+          reference: true,
+          attempts: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true, reason: true, createdAt: true } },
+        },
+      },
       items: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -52,7 +74,14 @@ export async function getTrackedOrder(token: string, locale: Locale): Promise<Tr
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,
     total: order.total,
-    payment: order.payment,
+    payment: order.payment && {
+      method: order.payment.method,
+      status: order.payment.status,
+      reference: order.payment.status === "PAID" ? order.payment.reference : null,
+      attempt: order.payment.attempts[0]
+        ? { ...order.payment.attempts[0], createdAt: order.payment.attempts[0].createdAt.toISOString() }
+        : null,
+    },
     items: order.items.map((i) => ({
       id: i.id,
       name: snapshotName(i.names, locale),

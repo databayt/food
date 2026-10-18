@@ -27,6 +27,7 @@ import { getRememberedCustomer, rememberCustomer, rememberOrder } from "../cart/
 import { useCart, useCartHydrated } from "../cart/use-cart"
 import { cartSignature, cartSubtotal, indexMenu, resolveCart } from "../cart/util"
 import type { MenuView } from "../menu/types"
+import { startMomoPayment } from "../payment/actions"
 import { createOrder } from "./actions"
 import { clearCheckoutKey, getCheckoutKey } from "./idempotency"
 import { CheckoutFormSchema, type CheckoutFormValues } from "./validation"
@@ -34,7 +35,10 @@ import { CheckoutFormSchema, type CheckoutFormValues } from "./validation"
 type Settings = Pick<
   RestaurantSettings,
   "isOpen" | "pickupEnabled" | "deliveryEnabled" | "deliveryFee" | "cashEnabled" | "momoEnabled" | "momoCode"
->
+> & {
+  /** MTN Request-to-Pay is live: the guest gets a PIN prompt on their phone. */
+  momoApi: boolean
+}
 
 export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: MenuView; settings: Settings }) {
   const dict = useDictionary()
@@ -49,6 +53,7 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
   const [pending, startTransition] = useTransition()
   const [placed, setPlaced] = useState(false)
   const [location, setLocation] = useState<DeliveryPin | null>(null)
+  const [momoPhone, setMomoPhone] = useState("")
   const Back = isRTL ? ArrowRight : ArrowLeft
   const errorText = (code?: string) => (code ? ((dict?.errors as Record<string, string> | undefined)?.[code] ?? code) : undefined)
 
@@ -140,6 +145,15 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
       })
       clearCheckoutKey()
       clearCart()
+      // Fire the PIN prompt now, while the phone is in hand. A failure is not
+      // fatal: the tracking page shows why and offers "send again".
+      if (values.paymentMethod === "MOMO" && settings.momoApi) {
+        try {
+          await startMomoPayment({ token: res.data.token, phone: momoPhone.trim() || undefined })
+        } catch {
+          // offline or crashed — the tracking page retries
+        }
+      }
       router.replace(`/${lang}/track/${res.data.token}?new=1`)
     })
   }
@@ -259,12 +273,35 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
                     hint:
                       m === "CASH"
                         ? dict?.checkout?.cashHint
-                        : settings.momoCode
+                        : settings.momoApi
+                          ? dict?.checkout?.momoPushHint
+                          : settings.momoCode
                           ? interpolate(dict?.checkout?.momoHint, { code: settings.momoCode })
                           : undefined,
                     icon: m === "CASH" ? <Banknote className="size-5" /> : <Smartphone className="size-5" />,
                   }))}
                 />
+                {paymentMethod === "MOMO" && settings.momoApi && (
+                  <div className="space-y-1.5">
+                    <label htmlFor="momo-phone" className="text-sm font-medium">
+                      {dict?.checkout?.momoNumber ?? "MoMo number"}{" "}
+                      <span className="font-normal text-muted-foreground">({dict?.common?.optional ?? "Optional"})</span>
+                    </label>
+                    <Input
+                      id="momo-phone"
+                      value={momoPhone}
+                      onChange={(e) => setMomoPhone(e.target.value)}
+                      type="tel"
+                      inputMode="tel"
+                      dir="ltr"
+                      maxLength={20}
+                      className="h-12 text-base"
+                      placeholder={dict?.checkout?.phonePlaceholder ?? "078 123 4567"}
+                      data-testid="momo-phone"
+                    />
+                    <p className="text-xs">{dict?.checkout?.momoNumberHint}</p>
+                  </div>
+                )}
               </section>
             )}
 

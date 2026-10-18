@@ -26,7 +26,8 @@ export type CashierOrder = {
   note: string | null
   total: number
   cancelReason: string | null
-  payment: { method: PaymentMethod; status: PaymentStatus; reference: string | null } | null
+  /** `provider` set = confirmed by MTN itself (no cashier step); `reference` is the receipt. */
+  payment: { method: PaymentMethod; status: PaymentStatus; reference: string | null; provider: string | null } | null
   items: QueueItem[]
 }
 

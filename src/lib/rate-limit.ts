@@ -21,6 +21,10 @@ const TIER_CONFIG = {
   order: { limit: 60, windowMs: 10 * 60_000, window: "10 m" },
   /** Guest order creation — per normalized phone number (the real identity). */
   "order-phone": { limit: 5, windowMs: 10 * 60_000, window: "10 m" },
+  /** MoMo "enter your PIN" prompts — per client IP. */
+  momo: { limit: 30, windowMs: 10 * 60_000, window: "10 m" },
+  /** MoMo prompts — per order tracking token (stops prompt-spamming a phone). */
+  "momo-order": { limit: 6, windowMs: 10 * 60_000, window: "10 m" },
   /** Guest order-status polling — per client IP. */
   track: { limit: 120, windowMs: 60_000, window: "1 m" },
   /** Staff login attempts — per IP. */

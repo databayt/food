@@ -147,6 +147,12 @@ export function OrderCard({
               {dict?.enums?.paymentMethod?.[order.payment.method]} · {dict?.enums?.paymentStatus?.[order.payment.status]}
             </span>
           )}
+          {order.payment?.status === "PAID" && order.payment.reference && (
+            <span className="whitespace-nowrap text-xs tabular-nums" dir="ltr" data-testid="payment-receipt">
+              {order.payment.provider ? `${dict?.cashier?.momoAuto ?? "Auto"} · ` : ""}
+              {order.payment.reference}
+            </span>
+          )}
         </div>
       </header>
 

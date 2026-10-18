@@ -59,7 +59,7 @@ export async function getCashierQueue(locale: Locale): Promise<CashierOrder[]> {
       note: true,
       total: true,
       cancelReason: true,
-      payment: { select: { method: true, status: true, reference: true } },
+      payment: { select: { method: true, status: true, reference: true, provider: true } },
       items: itemSelect,
     },
   })

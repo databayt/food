@@ -7,6 +7,7 @@ import { CheckoutForm } from "@/components/order/checkout/form"
 import { getMenu } from "@/components/order/menu/queries"
 import { getRestaurant } from "@/components/restaurant/queries"
 import { SiteHeader } from "@/components/template/site-header"
+import { isMomoApiConfigured } from "@/lib/momo/config"
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/order/checkout">): Promise<Metadata> {
   const { lang } = await params
@@ -33,6 +34,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[lang]/order/
           cashEnabled: r.cashEnabled,
           momoEnabled: r.momoEnabled,
           momoCode: r.momoCode,
+          momoApi: r.momoEnabled && isMomoApiConfigured(),
         }}
       />
     </>

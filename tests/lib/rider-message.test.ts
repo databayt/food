@@ -20,7 +20,7 @@ const ORDER: CashierOrder = {
   note: "Call on arrival",
   total: 8000,
   cancelReason: null,
-  payment: { method: "CASH", status: "PENDING", reference: null },
+  payment: { method: "CASH", status: "PENDING", reference: null, provider: null },
   items: [
     { id: "a", name: "Classic Beef Burger", quantity: 2, modifiers: ["Cheese Extra"], note: null },
     { id: "b", name: "Fanta", quantity: 1, modifiers: [], note: null },
@@ -51,7 +51,7 @@ describe("riderMessage", () => {
 
   it("tells the rider to collect nothing once paid, and skips a missing pin", () => {
     const text = riderMessage(
-      { ...ORDER, deliveryLat: null, deliveryLng: null, note: null, payment: { method: "MOMO", status: "PAID", reference: "MP1" } },
+      { ...ORDER, deliveryLat: null, deliveryLng: null, note: null, payment: { method: "MOMO", status: "PAID", reference: "MP1", provider: null } },
       en.cashier.rider,
       opts
     )

@@ -132,7 +132,10 @@
     "locationHint": "Helps the rider find your door. Share it from the place you want the food delivered.",
     "locationError": "We couldn't get your location. Describe the place in the address instead.",
     "viewOnMap": "Check on map",
-    "removeLocation": "Remove"
+    "removeLocation": "Remove",
+    "momoPushHint": "You'll get a prompt on your phone. Enter your MoMo PIN to pay.",
+    "momoNumber": "MoMo number",
+    "momoNumberHint": "Leave empty to use the phone number above. MTN numbers only (078/079)."
   },
   "track": {
     "title": "Order #{number}",
@@ -164,7 +167,22 @@
     "copy": "Copy",
     "copied": "Copied",
     "pickupAt": "Pickup at",
-    "directions": "Directions"
+    "directions": "Directions",
+    "momoPaid": "Paid with MTN MoMo",
+    "momoReceipt": "Receipt",
+    "momoCheckPhone": "Check your phone",
+    "momoApprove": "Approve {price} with your MoMo PIN.",
+    "momoFailed": {
+      "FAILED": "The payment didn't go through.",
+      "REJECTED": "The payment was declined on the phone.",
+      "TIMEOUT": "The prompt expired before it was approved."
+    },
+    "momoPushHint": "We'll send a payment prompt to your phone. Enter your PIN to pay.",
+    "momoNumber": "MoMo number",
+    "momoNumberPlaceholder": "MoMo number (empty = your checkout number)",
+    "momoSend": "Send payment prompt to my phone",
+    "momoResend": "Send the prompt again",
+    "momoManual": "Or pay with the merchant code instead"
   },
   "auth": {
     "title": "Staff sign in",
@@ -239,7 +257,8 @@
       "note": "Note: {note}",
       "collect": "Collect: {amount} ({method})",
       "paid": "Paid — collect nothing."
-    }
+    },
+    "momoAuto": "MoMo auto"
   },
   "kitchen": {
     "title": "Kitchen",
@@ -351,7 +370,8 @@
         "STATUS": "Status changed",
         "PAYMENT_PAID": "Payment recorded",
         "PAYMENT_REFUNDED": "Refund recorded",
-        "DISPATCHED": "Out for delivery"
+        "DISPATCHED": "Out for delivery",
+        "PAYMENT_DUPLICATE": "Duplicate MoMo payment (refund it)"
       },
       "byCustomer": "Customer",
       "previous": "Previous",
@@ -443,7 +463,11 @@
     "UPLOAD_DISABLED": "Photo upload isn't set up. Paste a photo URL instead.",
     "UPLOAD_FAILED": "Upload failed. Please try again.",
     "CATEGORY_NOT_EMPTY": "Move or archive its items first.",
-    "INVALID_CREDENTIALS": "Wrong email or password."
+    "INVALID_CREDENTIALS": "Wrong email or password.",
+    "MOMO_UNAVAILABLE": "MoMo isn't responding right now. Try again, or pay with the merchant code.",
+    "MOMO_REJECTED": "MoMo couldn't send the prompt to that number.",
+    "MOMO_NUMBER_INVALID": "Enter an MTN MoMo number, e.g. 078 123 4567.",
+    "MOMO_NOT_FOUND": "MoMo couldn't find that payment."
   },
   "pwa": {
     "appDesc": "Order faster. Opens full screen, like an app.",

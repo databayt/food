@@ -11,6 +11,7 @@ import { SiteHeader } from "@/components/template/site-header"
 import { TrackContent } from "@/components/track/content"
 import { getTrackedOrder } from "@/components/track/queries"
 import { Button } from "@/components/ui/button"
+import { isMomoApiConfigured } from "@/lib/momo/config"
 
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
@@ -49,6 +50,7 @@ export default async function TrackPage({ params, searchParams }: PageProps<"/[l
         initial={order}
         isNew={sp.new === "1"}
         momoCode={restaurant.momoEnabled ? restaurant.momoCode : null}
+        momoApi={restaurant.momoEnabled && isMomoApiConfigured()}
         pickup={{ name: restaurant.name, address: restaurant.address }}
         help={
           <WhatsAppFallback

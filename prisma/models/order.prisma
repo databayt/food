@@ -26,6 +26,15 @@ enum PaymentStatus {
   REFUNDED
 }
 
+/// One push-to-pay request ("enter your PIN") sent to the payer's phone.
+enum PaymentAttemptStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  REJECTED
+  TIMEOUT
+}
+
 model Customer {
   id          String   @id @default(cuid())
   phone       String   @unique // E.164, e.g. +250794000095
@@ -131,16 +140,46 @@ model Payment {
   status       PaymentStatus @default(PENDING)
   amount       Int
   reference    String?
+  /// Set when a provider confirmed the money (e.g. "MTN_MOMO"); null = cashier.
+  provider     String?
   paidAt       DateTime?
   refundedAt   DateTime?
   recordedById String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  order      Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  recordedBy User? @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  order      Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  recordedBy User?            @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  attempts   PaymentAttempt[]
 
   @@map("payments")
+}
+
+/// MTN MoMo Request to Pay. A declined or timed-out prompt keeps its row and
+/// the guest can send a new one. Only a status read back from the provider
+/// moves money state — callbacks are never trusted on their own.
+model PaymentAttempt {
+  id                     String               @id @default(cuid())
+  paymentId              String
+  provider               String               @default("MTN_MOMO")
+  /// X-Reference-Id (UUID v4) we send to the provider.
+  referenceId            String               @unique
+  /// E.164, the number the prompt went to (may differ from the order phone).
+  payerPhone             String
+  amount                 Int
+  status                 PaymentAttemptStatus @default(PENDING)
+  /// The MoMo receipt number the payer sees in their SMS.
+  financialTransactionId String?
+  reason                 String?
+  lastCheckedAt          DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+  @@index([status, createdAt])
+  @@map("payment_attempts")
 }
 
 /// Audit trail: one row per order-status change and per payment event.

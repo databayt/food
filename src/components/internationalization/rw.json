@@ -132,7 +132,10 @@
     "locationHint": "Bifasha umumotari kukugeraho. Bisangize uri aho ushaka ko ibiryo bikugeraho.",
     "locationError": "Ntitwabashije kubona aho uri. Sobanura aho hantu muri aderesi.",
     "viewOnMap": "Reba ku ikarita",
-    "removeLocation": "Kuraho"
+    "removeLocation": "Kuraho",
+    "momoPushHint": "Uzabona ubutumwa kuri telefone yawe. Shyiramo PIN ya MoMo wishyure.",
+    "momoNumber": "Nimero ya MoMo",
+    "momoNumberHint": "Siga ubusa ukoreshe nimero iri hejuru. Nimero za MTN gusa (078/079)."
   },
   "track": {
     "title": "Komande #{number}",
@@ -164,7 +167,22 @@
     "copy": "Koporora",
     "copied": "Byakoporowe",
     "pickupAt": "Aho kubifatira",
-    "directions": "Inzira"
+    "directions": "Inzira",
+    "momoPaid": "Wishyuye na MTN MoMo",
+    "momoReceipt": "Inyemezabwishyu",
+    "momoCheckPhone": "Reba kuri telefone yawe",
+    "momoApprove": "Emeza {price} ukoresheje PIN ya MoMo.",
+    "momoFailed": {
+      "FAILED": "Kwishyura ntibyakunze.",
+      "REJECTED": "Kwishyura byanzwe kuri telefone.",
+      "TIMEOUT": "Igihe cyo kwemeza cyarangiye."
+    },
+    "momoPushHint": "Turohereza ubutumwa bwo kwishyura kuri telefone yawe. Shyiramo PIN wishyure.",
+    "momoNumber": "Nimero ya MoMo",
+    "momoNumberPlaceholder": "Nimero ya MoMo (ubusa = nimero watanze)",
+    "momoSend": "Ohereza ubutumwa bwo kwishyura kuri telefone yanjye",
+    "momoResend": "Ongera wohereze",
+    "momoManual": "Cyangwa wishyure ukoresheje kode y'umucuruzi"
   },
   "auth": {
     "title": "Kwinjira kw'abakozi",
@@ -239,7 +257,8 @@
       "note": "Icyitonderwa: {note}",
       "collect": "Akira: {amount} ({method})",
       "paid": "Byishyuwe — ntacyo wakira."
-    }
+    },
+    "momoAuto": "MoMo yikora"
   },
   "kitchen": {
     "title": "Igikoni",
@@ -351,7 +370,8 @@
         "STATUS": "Uko ihagaze byahindutse",
         "PAYMENT_PAID": "Kwishyura byanditswe",
         "PAYMENT_REFUNDED": "Gusubiza amafaranga byanditswe",
-        "DISPATCHED": "Umumotari yagiye"
+        "DISPATCHED": "Umumotari yagiye",
+        "PAYMENT_DUPLICATE": "Kwishyura kwa MoMo kwisubiyemo (subiza amafaranga)"
       },
       "byCustomer": "Umukiriya",
       "previous": "Ibibanza",
@@ -443,7 +463,11 @@
     "UPLOAD_DISABLED": "Kohereza amafoto ntibirategurwa. Shyiramo link y'ifoto.",
     "UPLOAD_FAILED": "Kohereza byanze. Ongera ugerageze.",
     "CATEGORY_NOT_EMPTY": "Banza wimure cyangwa ushyingure ibintu birimo.",
-    "INVALID_CREDENTIALS": "Imeri cyangwa ijambo ry'ibanga si byo."
+    "INVALID_CREDENTIALS": "Imeri cyangwa ijambo ry'ibanga si byo.",
+    "MOMO_UNAVAILABLE": "MoMo ntiri gusubiza ubu. Ongera ugerageze, cyangwa wishyure ukoresheje kode y'umucuruzi.",
+    "MOMO_REJECTED": "MoMo ntiyashoboye kohereza ubutumwa kuri iyo nimero.",
+    "MOMO_NUMBER_INVALID": "Andika nimero ya MTN MoMo, urugero 078 123 4567.",
+    "MOMO_NOT_FOUND": "MoMo ntiyabonye uko kwishyura."
   },
   "pwa": {
     "appDesc": "Tumiza vuba. Ifunguka yuzuye nka porogaramu.",

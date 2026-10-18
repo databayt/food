@@ -132,7 +132,10 @@
     "locationHint": "يساعد السائق في الوصول إلى بابك. شاركه من المكان الذي تريد التوصيل إليه.",
     "locationError": "تعذّر تحديد موقعك. صف المكان في العنوان بدلًا من ذلك.",
     "viewOnMap": "عرض على الخريطة",
-    "removeLocation": "إزالة"
+    "removeLocation": "إزالة",
+    "momoPushHint": "سيصلك طلب دفع على هاتفك. أدخل رمز MoMo السري للدفع.",
+    "momoNumber": "رقم MoMo",
+    "momoNumberHint": "اتركه فارغًا لاستخدام رقم الهاتف أعلاه. أرقام MTN فقط (078/079)."
   },
   "track": {
     "title": "الطلب رقم {number}",
@@ -164,7 +167,22 @@
     "copy": "نسخ",
     "copied": "تم النسخ",
     "pickupAt": "مكان الاستلام",
-    "directions": "الاتجاهات"
+    "directions": "الاتجاهات",
+    "momoPaid": "تم الدفع عبر MTN MoMo",
+    "momoReceipt": "رقم الإيصال",
+    "momoCheckPhone": "تحقق من هاتفك",
+    "momoApprove": "وافق على دفع {price} برمز MoMo السري.",
+    "momoFailed": {
+      "FAILED": "لم تتم عملية الدفع.",
+      "REJECTED": "رُفض الدفع من الهاتف.",
+      "TIMEOUT": "انتهت مهلة الطلب قبل الموافقة."
+    },
+    "momoPushHint": "سنرسل طلب دفع إلى هاتفك. أدخل رمزك السري للدفع.",
+    "momoNumber": "رقم MoMo",
+    "momoNumberPlaceholder": "رقم MoMo (فارغ = رقمك في الطلب)",
+    "momoSend": "أرسل طلب الدفع إلى هاتفي",
+    "momoResend": "أعد إرسال الطلب",
+    "momoManual": "أو ادفع برمز التاجر بدلًا من ذلك"
   },
   "auth": {
     "title": "دخول الموظفين",
@@ -239,7 +257,8 @@
       "note": "ملاحظة: {note}",
       "collect": "حصّل: {amount} ({method})",
       "paid": "مدفوع — لا تحصّل شيئًا."
-    }
+    },
+    "momoAuto": "MoMo تلقائي"
   },
   "kitchen": {
     "title": "المطبخ",
@@ -351,7 +370,8 @@
         "STATUS": "تغيّرت الحالة",
         "PAYMENT_PAID": "سُجّل الدفع",
         "PAYMENT_REFUNDED": "سُجّل الاسترداد",
-        "DISPATCHED": "خرج للتوصيل"
+        "DISPATCHED": "خرج للتوصيل",
+        "PAYMENT_DUPLICATE": "دفعة MoMo مكررة (يجب ردّها)"
       },
       "byCustomer": "العميل",
       "previous": "السابق",
@@ -443,7 +463,11 @@
     "UPLOAD_DISABLED": "رفع الصور غير مُعدّ. الصق رابط صورة بدلًا من ذلك.",
     "UPLOAD_FAILED": "فشل الرفع. حاول مرة أخرى.",
     "CATEGORY_NOT_EMPTY": "انقل أصنافه أو أرشفها أولًا.",
-    "INVALID_CREDENTIALS": "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+    "INVALID_CREDENTIALS": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "MOMO_UNAVAILABLE": "خدمة MoMo لا تستجيب الآن. حاول مجددًا أو ادفع برمز التاجر.",
+    "MOMO_REJECTED": "تعذّر على MoMo إرسال الطلب إلى هذا الرقم.",
+    "MOMO_NUMBER_INVALID": "أدخل رقم MTN MoMo، مثل 078 123 4567.",
+    "MOMO_NOT_FOUND": "لم يجد MoMo هذه العملية."
   },
   "pwa": {
     "appDesc": "اطلب أسرع. يفتح بملء الشاشة كأنه تطبيق.",

@@ -1,6 +1,7 @@
 "use server"
 
 import { toLocale } from "@/components/internationalization/config"
+import { refreshRecentPendingAttempts } from "@/components/order/payment/settle"
 import { fail, ok, type ActionResponse } from "@/lib/action-response"
 import { getStaffSession } from "@/lib/auth"
 import { db } from "@/lib/db"
@@ -29,6 +30,9 @@ async function limited(userId: string): Promise<boolean> {
 export async function fetchCashierQueue(locale: string): Promise<ActionResponse<CashierOrder[]>> {
   const session = await getStaffSession(ROUTE_ROLES.cashier)
   if (!session) return fail("FORBIDDEN")
+  // Settle MoMo prompts the guest answered after closing their tab. Not
+  // awaited: an MTN hiccup must never slow the queue; the next poll shows it.
+  void refreshRecentPendingAttempts().catch((error) => console.error("[cashier] momo refresh failed", error))
   return ok(await getCashierQueue(toLocale(locale)))
 }
 

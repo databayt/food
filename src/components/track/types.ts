@@ -1,4 +1,4 @@
-import type { FulfillmentType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
+import type { FulfillmentType, OrderStatus, PaymentAttemptStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
 
 /** Customer-safe order view. Never carries phone numbers or addresses. */
 export type TrackedOrder = {
@@ -13,7 +13,14 @@ export type TrackedOrder = {
   subtotal: number
   deliveryFee: number
   total: number
-  payment: { method: PaymentMethod; status: PaymentStatus } | null
+  payment: {
+    method: PaymentMethod
+    status: PaymentStatus
+    /** MoMo receipt number once paid (financialTransactionId or cashier entry). */
+    reference: string | null
+    /** Latest MoMo PIN prompt, if one was sent. The payer number is never exposed. */
+    attempt: { status: PaymentAttemptStatus; reason: string | null; createdAt: string } | null
+  } | null
   items: {
     id: string
     name: string

@@ -72,6 +72,7 @@ The production admin is `admin@charlesburgers.rw`; its password is Keychain `cf-
 - **Order creation** is one transaction, prices come only from the database, and an idempotency key makes double-submits return the same order.
 - **Status**: `NEW → CONFIRMED → PREPARING → READY → COMPLETED`, plus `CANCELLED`. Transitions are checked against the role table and the status the staff member saw. Payment status is separate.
 - **Delivery**: the guest types an address and can attach a map pin ("Share my location"). The cashier card opens the pin in Google Maps, messages the customer on WhatsApp, and sends the rider one WhatsApp message with address, pin, items and the amount to collect. "Out for delivery" stamps `dispatchedAt` (the status stays READY) and the guest sees "On the way"; "Delivered" completes it.
+- **MoMo push-to-pay**: with the `MOMO_*` keys set, checkout sends an MTN Request-to-Pay PIN prompt to the guest's phone. MTN's status read-back (callback or poll) marks the order paid and stores the receipt number. Without the keys, the guest pays to the merchant code by hand. See `src/components/order/payment/README.md`.
 - **Live updates** are a poll (5 s staff, 10 s guests) — no realtime service. Staff screens keep polling behind other tabs, chime on new orders and repeat the chime every 30 s while an order waits for confirmation.
 - **Privacy**: tracking pages use an unguessable token and never show phone or address; the kitchen query never reads them.
 
