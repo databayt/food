@@ -1,4 +1,4 @@
-import type { FulfillmentType, OrderStatus, PaymentAttemptStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
+import type { FulfillmentType, OrderStatus, PaymentAttemptStatus, PaymentMethod, PaymentStatus } from "@/generated/prisma/client"
 
 /** Customer-safe order view. Never carries phone numbers or addresses. */
 export type TrackedOrder = {

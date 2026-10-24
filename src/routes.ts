@@ -3,7 +3,7 @@
  * that a session cookie exists for protected prefixes; the real role check
  * happens in each staff layout (`requireRole`) and every staff server action.
  */
-import type { UserRole } from "@prisma/client"
+import type { UserRole } from "@/generated/prisma/client"
 
 export const authRoutes = ["/login"]
 

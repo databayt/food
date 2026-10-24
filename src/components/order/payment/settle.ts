@@ -1,6 +1,6 @@
 import "server-only"
 
-import type { PaymentAttemptStatus } from "@prisma/client"
+import type { PaymentAttemptStatus } from "@/generated/prisma/client"
 
 import { db } from "@/lib/db"
 import { getRequestToPayStatus, MomoError } from "@/lib/momo/client"

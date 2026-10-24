@@ -1,6 +1,6 @@
 import "server-only"
 
-import type { Prisma, PrismaClient } from "@prisma/client"
+import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 
 import type { Locale } from "@/components/internationalization/config"
 import { nameMap } from "@/lib/order/localize"

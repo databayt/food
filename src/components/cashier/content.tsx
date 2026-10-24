@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { OrderStatus } from "@prisma/client"
+import type { OrderStatus } from "@/generated/prisma/client"
 
 import { ReceiptGlyph } from "@/components/atom/icons"
 import type { Locale } from "@/components/internationalization/config"

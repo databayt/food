@@ -1,26 +1,45 @@
 {
+  // Charles Burgers (bu.databayt.org) on Cloudflare Workers via OpenNext — no container.
+  //
+  // The $0-incremental lane (same recipe as databayt/space and databayt/co): OpenNext bundles the
+  // whole Next server into one Worker (10 MB compressed limit on Paid). Build + deploy with
+  // scripts/deploy-cloudflare.sh, which builds in a throwaway directory so it can switch the Prisma
+  // generator to `runtime = "workerd"` without touching local `next dev`.
+  // History: this was a Cloudflare Container (standard-1, always on) until 2026-10-24.
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Charles Burgers on Cloudflare Containers — the same lane as mkan and hogwarts:
-  // a thin Worker (cf/worker.js) in front of one container running the Next
-  // standalone server. Built on the Mac by scripts/deploy-cloudflare.sh.
   "name": "food",
   "main": "cf/worker.js",
   "compatibility_date": "2026-09-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
   "observability": { "enabled": true },
-  "containers": [
-    {
-      "class_name": "FoodContainer",
-      "image": "./Dockerfile.cf",
-      "max_instances": 1,
-      "instance_type": "standard-1"
-    }
-  ],
-  "durable_objects": {
-    "bindings": [{ "name": "FOOD", "class_name": "FoodContainer" }]
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FoodContainer"] }],
+  "vars": {
+    // Tells src/lib/db.ts to use the per-request Neon client.
+    "CF_WORKERS": "1",
+    "NEXT_PUBLIC_APP_URL": "https://bu.databayt.org",
+    "NEXTAUTH_URL": "https://bu.databayt.org",
+    "AUTH_URL": "https://bu.databayt.org",
+    "AUTH_TRUST_HOST": "true",
+    "ALLOWED_ORIGINS": "bu.databayt.org",
+    "DATABASE_URL_ADAPTER": "neon"
+  },
+  // ISR incremental cache (open-next.config.ts).
+  "kv_namespaces": [{ "binding": "NEXT_INC_CACHE_KV", "id": "51f872c2dd1148b19c0a491889382a99" }],
+  // revalidatePath / revalidateTag tag cache (open-next.config.ts).
+  "durable_objects": {
+    "bindings": [{ "name": "NEXT_TAG_CACHE_DO_SHARDED", "class_name": "DOShardedTagCache" }]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["FoodContainer"] },
+    // The container is gone: drop its class and add the OpenNext tag cache.
+    { "tag": "v2", "deleted_classes": ["FoodContainer"], "new_sqlite_classes": ["DOShardedTagCache"] }
+  ],
+  // OpenNext calls back into its own Worker when revalidating.
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "food" }],
   // bu.databayt.org is a proxied AAAA 100:: placeholder in the databayt.org zone;
   // this route is what actually serves it (same pattern as kun.databayt.org).
   "routes": [{ "pattern": "bu.databayt.org/*", "zone_name": "databayt.org" }]

@@ -4,7 +4,8 @@
 // no minor unit, ISO 4217 exponent 0) — never Float.
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {

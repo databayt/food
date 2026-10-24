@@ -1,4 +1,4 @@
-import type { OrderStatus, UserRole } from "@prisma/client"
+import type { OrderStatus, UserRole } from "@/generated/prisma/client"
 
 /**
  * The order state machine — the single source of truth for which transitions

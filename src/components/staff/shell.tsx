@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LogOut } from "lucide-react"
-import type { UserRole } from "@prisma/client"
+import type { UserRole } from "@/generated/prisma/client"
 
 import { BrandMark } from "@/components/atom/brand-mark"
 import { ChefGlyph, ReceiptGlyph, SettingsGlyph } from "@/components/atom/icons"

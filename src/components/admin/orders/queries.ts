@@ -1,6 +1,6 @@
 import "server-only"
 
-import type { OrderStatus, Prisma } from "@prisma/client"
+import type { OrderStatus, Prisma } from "@/generated/prisma/client"
 
 import type { Locale } from "@/components/internationalization/config"
 import { db } from "@/lib/db"

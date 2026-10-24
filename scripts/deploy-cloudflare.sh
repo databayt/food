@@ -1,101 +1,126 @@
 #!/usr/bin/env bash
-# Charles Burgers (food) → Cloudflare Containers. Ported from mkan's
-# scripts/deploy-cloudflare.sh: builds the Next standalone server on the Mac,
-# wraps it in a COPY-only linux/amd64 image, smokes it locally, deploys it
-# behind the Worker in cf/worker.js.
+# Charles Burgers (food, bu.databayt.org) → Cloudflare Workers via OpenNext. No container: the
+# $0-incremental lane on the Workers Paid plan (same recipe as databayt/space and databayt/co).
 #
-#   scripts/deploy-cloudflare.sh <env-file> build|smoke|deploy|all
+#   scripts/deploy-cloudflare.sh <env-file> build|preview|deploy|all
 #
-# <env-file>  dotenv with the PRODUCTION values (scripts/cf-keychain-env.sh > file).
-#             NEXT_PUBLIC_* are inlined by next build; non-secret vars are baked into
-#             the image as env.json; secrets go to the Worker via scripts/cf-secrets.sh.
-# build       copy the source, install (incl. linux/x64 binaries), next build (standalone),
-#             assemble the image dir. The local .env is NEVER copied: dev secrets must
-#             not reach the image, and nothing at build time touches the database.
-# smoke       docker build (linux/amd64) + run on :3300, curl it, stop
-# deploy      wrangler deploy from the build dir (builds + pushes the image)
+# <env-file>  production dotenv (0600, outside the repo): scripts/cf-keychain-env.sh > file.
+#             Needed AT BUILD TIME too (NEXT_PUBLIC_* are inlined). Durable copies of each secret
+#             live in the macOS Keychain as cf-food-<VAR>.
+# build       export HEAD (or $CF_DEPLOY_REF) to a throwaway dir, switch nothing but that copy, OpenNext build
+# preview     run the real Worker locally in workerd against the real database
+# deploy      push secrets, populate the ISR cache, deploy
 #
-# CF_SOURCE=<ref>|head|worktree  what to build (default head).
-# CF_BUILD_DIR, CF_HEAP_MB (3072), NEXT_BUILD_CPUS (2).
+# CF_WORKER_NAME=food-next  deploy a TRIAL Worker instead: different name, no routes, workers_dev only,
+#                           no AUTH_URL/NEXTAUTH_URL (the request URL is right on Workers).
+# CF_BUILD_DIR, CF_HEAP_MB (4096), CF_DEPLOY_REF.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ENV_FILE=${1:?dotenv with production values}; MODE=${2:-all}
+ENV_FILE=${1:?production dotenv}; MODE=${2:-all}
 ENV_FILE=$(cd "$(dirname "$ENV_FILE")" && pwd)/$(basename "$ENV_FILE")
-BUILD_DIR=${CF_BUILD_DIR:-${TMPDIR:-/tmp}/food-cf-build}
-IMAGE=food-cf:local
+# Not $TMPDIR: macOS purges /var/folders overnight and silently guts node_modules.
+BUILD_DIR=${CF_BUILD_DIR:-$HOME/.cache/cf-build/food-next}
+REF=${CF_DEPLOY_REF:-HEAD}
+MAX_GZIP_KB=${MAX_GZIP_KB:-10240}
+# Set in wrangler.jsonc "vars" — never pushed as secrets (a secret can't shadow a var).
+NOT_SECRET='^(CF_WORKERS|NEXT_PUBLIC_APP_URL|NEXTAUTH_URL|AUTH_URL|AUTH_TRUST_HOST|ALLOWED_ORIGINS|DATABASE_URL_ADAPTER|VERCEL|TURBO_|NX_)'
+
+load_env() {
+  while IFS= read -r line; do
+    [[ "$line" =~ ^([A-Z0-9_]+)=(.*)$ ]] || continue
+    local k="${BASH_REMATCH[1]}" v="${BASH_REMATCH[2]}"
+    v="${v%\"}"; v="${v#\"}"
+    [[ -z "$v" ]] && continue
+    export "$k=$v"
+  done < "$ENV_FILE"
+}
 
 build() {
-  local SOURCE=${CF_SOURCE:-head}
   rm -rf "$BUILD_DIR"; mkdir -p "$BUILD_DIR"
-  if [[ "$SOURCE" == "worktree" ]]; then
-    echo "==> copying the WORKING TREE ($(git rev-parse --short HEAD) + uncommitted changes) to $BUILD_DIR"
-    rsync -a --exclude node_modules --exclude .next --exclude .git --exclude coverage \
-      --exclude playwright-report --exclude test-results --exclude playwright --exclude '.env' --exclude '.env.*' \
-      ./ "$BUILD_DIR/"
-  else
-    local REF=$SOURCE; [[ "$REF" == "head" ]] && REF=HEAD
-    echo "==> exporting $REF ($(git rev-parse --short "$REF")) to $BUILD_DIR"
-    git archive "$REF" | tar -x -C "$BUILD_DIR"
-  fi
+  echo "==> exporting $REF ($(git rev-parse --short "$REF")) to $BUILD_DIR"
+  git archive "$REF" | tar -x -C "$BUILD_DIR"
   cd "$BUILD_DIR"
+  load_env
+  export CF_WORKERS=1 NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS="--max-old-space-size=${CF_HEAP_MB:-4096}"
 
-  echo "==> installing for darwin + linux/x64 (sharp, swc binaries for the image)"
-  node -e '
-    const fs=require("fs");const p=JSON.parse(fs.readFileSync("package.json","utf8"));
-    p.pnpm={...(p.pnpm||{}),supportedArchitectures:{os:["current","linux"],cpu:["current","x64"],libc:["current","glibc"]}};
-    fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'
-  pnpm install --frozen-lockfile --prefer-offline --silent --ignore-scripts
-  node scripts/fetch-thmanyah.mjs >/dev/null   # fonts are fetch-only (license)
+  echo "==> switching the Prisma generator to runtime = \"workerd\" (this copy only)"
+  python3 - <<'PY'
+import pathlib, re
+p = pathlib.Path('prisma/schema.prisma'); s = p.read_text()
+if 'runtime' not in s.split('generator client',1)[1].split('}',1)[0]:
+    s = re.sub(r'(generator client \{[^}]*?provider\s*=\s*"prisma-client")', r'\1\n  runtime  = "workerd"', s, count=1)
+    p.write_text(s)
+print('    ' + [l for l in s.splitlines() if 'runtime' in l][0].strip())
+PY
 
-  echo "==> prisma generate"
-  pnpm exec prisma generate >/dev/null
+  if [[ -n "${CF_WORKER_NAME:-}" && "$CF_WORKER_NAME" != "food" ]]; then
+    echo "==> trial Worker '$CF_WORKER_NAME': no routes, no AUTH_URL, own self-reference"
+    node -e '
+      const fs=require("fs"); const name=process.argv[1];
+      const txt=fs.readFileSync("wrangler.jsonc","utf8").split("\n").filter(l=>!/^\s*\/\//.test(l)).join("\n");
+      const c=JSON.parse(txt);
+      c.name=name; delete c.routes;
+      c.vars.ALLOWED_ORIGINS=process.env.TRIAL_ORIGINS||""; delete c.vars.AUTH_URL; delete c.vars.NEXTAUTH_URL;
+      c.services=[{binding:"WORKER_SELF_REFERENCE",service:name}];
+      c.migrations=[{tag:"v2",new_sqlite_classes:["DOShardedTagCache"]}];
+      fs.writeFileSync("wrangler.jsonc",JSON.stringify(c,null,2));
+    ' "$CF_WORKER_NAME"
+  fi
+
+  echo "==> fonts (fetch-only, license) + installing (postinstall: prisma generate, now for workerd)"
+  node scripts/fetch-thmanyah.mjs >/dev/null
+  pnpm install --frozen-lockfile --prefer-offline --silent
 
   echo "==> i18n gate"
   pnpm i18n:check >/dev/null
 
-  echo "==> next build (standalone) with $ENV_FILE"
-  export CF_CONTAINER=1 NODE_OPTIONS="--max-old-space-size=${CF_HEAP_MB:-3072}" NEXT_TELEMETRY_DISABLED=1 NEXT_BUILD_CPUS=${NEXT_BUILD_CPUS:-2}
-  node cf/env-split.mjs "$ENV_FILE" run -- pnpm exec next build
-  [[ -f .next/standalone/server.js ]] || { echo "ABORT: .next/standalone/server.js missing"; exit 1; }
-  if ls -a .next/standalone | grep -qE '^\.env'; then echo "ABORT: a .env file reached the standalone output"; exit 1; fi
+  echo "==> opennextjs-cloudflare build"
+  pnpm exec opennextjs-cloudflare build
+  [[ -f .open-next/worker.js ]] || { echo "ABORT: .open-next/worker.js missing"; exit 1; }
 
-  echo "==> assembling: baked non-secret config"
-  node cf/env-split.mjs "$ENV_FILE" config > .next/standalone/env.json
-  echo "    env.json: $(node -e 'console.log(Object.keys(require("./.next/standalone/env.json")).length)') config vars; $(node cf/env-split.mjs "$ENV_FILE" secrets | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(Object.keys(JSON.parse(s)).length))') secrets stay with the Worker"
-  du -sh .next/standalone .next/static public | sed 's/^/    /'
+  echo "==> bundle size vs the ${MAX_GZIP_KB} KB Workers Paid limit"
+  local out; out=$(pnpm exec wrangler deploy --dry-run 2>&1 || true)
+  echo "$out" | grep -iE 'Total Upload' | sed 's/^/    /'
+  local gz; gz=$(echo "$out" | grep -oE 'gzip: [0-9.]+ [KM]iB' | head -1 | awk '{v=$2; if($3=="MiB") v=v*1024; printf "%d", v}')
+  if [[ -n "$gz" ]] && (( gz > MAX_GZIP_KB )); then
+    echo "ABORT: bundle is ${gz} KB gzip, over the ${MAX_GZIP_KB} KB limit. Not deploying."; exit 1
+  fi
+  echo "    ok: ${gz:-?} KB gzip"
 }
 
-smoke() {
+secrets_json() {
+  node -e '
+    const fs=require("fs"); const o={}; const skip=new RegExp(process.argv[2]);
+    for (const l of fs.readFileSync(process.argv[1],"utf8").split("\n")) {
+      const m=l.match(/^([A-Z0-9_]+)=(.*)$/); if(!m||skip.test(m[1])) continue;
+      let v=m[2].trim(); if(v.startsWith("\"")&&v.endsWith("\"")) v=v.slice(1,-1);
+      if(v) o[m[1]]=v;
+    }
+    process.stdout.write(JSON.stringify(o));
+  ' "$ENV_FILE" "$NOT_SECRET"
+}
+
+preview() {
   cd "$BUILD_DIR"
-  echo "==> docker build (linux/amd64, COPY-only)"
-  docker build --platform linux/amd64 -f Dockerfile.cf -t "$IMAGE" . 2>&1 | tail -3
-  local DENV; DENV=$(mktemp -t food-smoke.XXXXXX); trap 'rm -f "$DENV"' RETURN
-  node cf/env-split.mjs "$ENV_FILE" docker > "$DENV"
-  [[ -n "${SMOKE_DATABASE_URL:-}" ]] && printf 'DATABASE_URL=%s\nDIRECT_URL=%s\n' "$SMOKE_DATABASE_URL" "$SMOKE_DATABASE_URL" >> "$DENV"
-  docker rm -f food-cf-smoke >/dev/null 2>&1 || true
-  echo "==> docker run :3300 (DATABASE_URL host: $(grep -E '^DATABASE_URL=' "$DENV" | tail -1 | sed -E 's#.*@([^/:]+).*#\1#'))"
-  docker run -d --rm --name food-cf-smoke --platform linux/amd64 -p 3300:3000 --env-file "$DENV" "$IMAGE" >/dev/null
-  local i
-  for i in $(seq 1 90); do curl -sf -o /dev/null http://localhost:3300/api/health && break; sleep 2; done
-  echo "    boot: ${i}×2s"
-  for p in /api/health / /en/order /rw/order /ar/order /en/order/cart /en/login /en/cashier /en/track/AAAAAAAAAAAAAAAAAAAAAA /robots.txt; do
-    printf "    %-34s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url} %{time_total}s' -H 'Host: bu.databayt.org' -H 'X-Forwarded-Proto: https' "http://localhost:3300$p")"
-  done
-  echo "==> container log tail"; docker logs --tail 15 food-cf-smoke 2>&1 | sed 's/^/    /'
-  docker stop food-cf-smoke >/dev/null
+  secrets_json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const o=JSON.parse(s);require("fs").writeFileSync(".dev.vars",Object.entries(o).map(([k,v])=>k+"="+JSON.stringify(v)).join("\n")+"\n",{mode:0o600})})'
+  trap 'rm -f "$BUILD_DIR/.dev.vars"' EXIT
+  echo "==> preview on :8788 (real workerd, real database). Ctrl-C to stop."
+  pnpm exec opennextjs-cloudflare preview --port 8788
 }
 
 deploy() {
   cd "$BUILD_DIR"
-  echo "==> wrangler deploy (builds + pushes the image)"
-  pnpm exec wrangler deploy
+  echo "==> pushing secrets ($(secrets_json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(Object.keys(JSON.parse(s)).join(", ")))'))"
+  secrets_json | pnpm exec wrangler secret bulk
+  echo "==> opennextjs-cloudflare deploy (populates the KV cache, then wrangler deploy)"
+  pnpm exec opennextjs-cloudflare deploy
 }
 
 case "$MODE" in
   build) build ;;
-  smoke) smoke ;;
+  preview) preview ;;
   deploy) deploy ;;
-  all) build; smoke; deploy ;;
-  *) echo "mode must be build|smoke|deploy|all"; exit 2 ;;
+  all) build; deploy ;;
+  *) echo "mode must be build|preview|deploy|all"; exit 2 ;;
 esac
 echo "==> done ($MODE)"

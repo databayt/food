@@ -1,6 +1,6 @@
 "use server"
 
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@/generated/prisma/client"
 
 import { fail, ok, type ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"

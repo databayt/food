@@ -1,4 +1,4 @@
-import type { FulfillmentType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
+import type { FulfillmentType, OrderStatus, PaymentMethod, PaymentStatus } from "@/generated/prisma/client"
 
 export type QueueItem = {
   id: string

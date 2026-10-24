@@ -1,4 +1,4 @@
-import type { OrderStatus, UserRole } from "@prisma/client"
+import type { OrderStatus, UserRole } from "@/generated/prisma/client"
 import { describe, expect, it } from "vitest"
 
 import { canTransition, isTerminal, isValidTransition, nextStatus } from "@/lib/order/status"

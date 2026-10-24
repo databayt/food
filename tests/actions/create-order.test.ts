@@ -12,7 +12,7 @@ const state = vi.hoisted(() => ({
   rateLimited: false,
 }))
 
-vi.mock("@prisma/client", () => {
+vi.mock("@/generated/prisma/client", () => {
   class PrismaClientKnownRequestError extends Error {
     code: string
     meta?: unknown
@@ -41,7 +41,7 @@ vi.mock("@/lib/rate-limit", () => {
 })
 
 vi.mock("@/lib/db", async () => {
-  const { Prisma } = await import("@prisma/client")
+  const { Prisma } = await import("@/generated/prisma/client")
   let seq = 1000
   const db = {
     restaurant: { findUnique: vi.fn(async () => state.settings) },

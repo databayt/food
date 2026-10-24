@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { UserRole } from "@prisma/client"
+import type { UserRole } from "@/generated/prisma/client"
 import { Loader2, Plus } from "lucide-react"
 
 import { useDictionary } from "@/components/internationalization/use-dictionary"
