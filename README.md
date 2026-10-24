@@ -44,7 +44,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm i18n:check && pnpm build
 pnpm seed:test-staff && pnpm test:e2e   # Playwright (desktop, Pixel 7, iPhone 13, Arabic)
 ```
 
-## Deploy (Cloudflare Containers — the mkan/hogwarts lane)
+## Deploy (Cloudflare Workers via OpenNext — no container, the space/co lane)
 
 Live at **https://bu.databayt.org** (Worker `food`, also `food.osmanabdout.workers.dev`).
 DNS: proxied `AAAA bu 100::` in the `databayt.org` zone; the Worker route `bu.databayt.org/*` serves it.
@@ -53,13 +53,14 @@ Database: Neon project `food`, branch `main` (production). `.env` points at `dev
 Production values live only in the macOS Keychain as `cf-food-<VAR>` (no Vercel project):
 
 ```bash
-F="$TMPDIR/food-prod.env"; scripts/cf-keychain-env.sh > "$F"      # never print it
-scripts/deploy-cloudflare.sh "$F" build     # standalone build of HEAD (CF_SOURCE=worktree for uncommitted)
-scripts/deploy-cloudflare.sh "$F" smoke     # linux/amd64 image on :3300, curl table — read it
-scripts/cf-secrets.sh "$F"                  # only when a secret changed
-scripts/deploy-cloudflare.sh "$F" deploy    # wrangler pushes the image, swaps the container
-curl -s https://bu.databayt.org/api/health  # uptime resets when the new container serves
+F="$HOME/.cache/food-prod.env"; (umask 077; scripts/cf-keychain-env.sh > "$F")   # never print it
+scripts/deploy-cloudflare.sh "$F" build     # OpenNext build of HEAD (commit first) in ~/.cache/cf-build/food-next; aborts over 10 MB gzip
+scripts/deploy-cloudflare.sh "$F" preview   # optional: real workerd on :8788 against the real DB
+scripts/deploy-cloudflare.sh "$F" deploy    # pushes secrets, populates the KV cache, wrangler deploy
+curl -s https://bu.databayt.org/api/health  # uptime resets when the new version serves
 ```
+
+`CF_WORKER_NAME=food-next` deploys a trial Worker (no route) for verification; roll back with `wrangler rollback`.
 
 Schema changes: `DATABASE_URL=$DIRECT DIRECT_URL=$DIRECT pnpm exec prisma migrate deploy` against
 `main` **before** deploying code that needs them (take a Neon restore-point branch first).
