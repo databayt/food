@@ -37,6 +37,10 @@ pnpm dev                      # http://localhost:3000
 Item photos: `pnpm items:photos` cuts the supplied photos (fake checkerboard
 backgrounds) into transparent `public/items/<slug>.webp`; `pnpm items:attach`
 links them to items that have no photo yet. Prices: see `docs/menu-sources.md`.
+New photos from Admin → Menu → Upload photo: the browser shrinks them to a 1200 px WebP and
+posts them to `/api/upload`, which checks the bytes and stores them on S3 `databayt-cdn`
+(`charles-burgers/menu/`), served from `cdn.databayt.org` (`AWS_*`, `AWS_S3_BUCKET`,
+`NEXT_PUBLIC_CDN_DOMAIN`; Keychain `cf-food-*` in production). No bucket CORS needed.
 
 ## Quality gates
 
@@ -91,9 +95,11 @@ review of Kinyarwanda and Arabic UI copy (`docs/translation-review.md`).
 
 Before taking real orders (all in Admin, no code):
 
-- **Staff accounts** — production has only the admin. Add a Cashier login for the
-  counter phone/tablet and a Kitchen login (Admin → Staff). A NEW order waits for
-  a cashier or admin to confirm it before the kitchen sees it.
+- **Staff accounts** — done 2026-11-03: `cashier@charlesburgers.rw` and
+  `kitchen@charlesburgers.rw`, passwords in Keychain `cf-food-CASHIER_PASSWORD` /
+  `cf-food-KITCHEN_PASSWORD` (`security find-generic-password -s cf-food-CASHIER_PASSWORD -w`).
+  More staff, password resets and deactivation: Admin → Staff. A NEW (cash) order waits for a
+  cashier or admin to confirm it before the kitchen sees it; paid orders go straight there.
 - **Pickup address** — the street address and landmark (Admin → Settings); guests
   collecting an order see it with a Directions link. Today it reads "Kigali, Rwanda".
 - **Delivery fee** — 0 today, shown as "confirmed by the restaurant", so the stored

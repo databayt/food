@@ -1,8 +1,8 @@
 "use client"
 
 /**
- * Browser-side upload (mkan image-optimize + image-upload-client): downscale
- * and re-encode to WebP, get a presigned URL, PUT straight to S3.
+ * Browser-side upload (mkan image-optimize): downscale and re-encode to WebP,
+ * then POST it to /api/upload, which stores it on the CDN and returns the URL.
  * Throws an error whose message is a dictionary error code.
  */
 async function optimizeImageFile(file: File, maxEdge = 1200, quality = 0.82): Promise<File> {
@@ -27,17 +27,10 @@ async function optimizeImageFile(file: File, maxEdge = 1200, quality = 0.82): Pr
 
 export async function uploadMenuImage(original: File): Promise<string> {
   const file = await optimizeImageFile(original)
-  const presign = await fetch("/api/upload/presign", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contentType: file.type, size: file.size }),
-  })
-  if (!presign.ok) {
-    const { error } = (await presign.json().catch(() => ({}))) as { error?: string }
-    throw new Error(error ?? "UPLOAD_FAILED")
-  }
-  const { presignedUrl, finalUrl } = (await presign.json()) as { presignedUrl: string; finalUrl: string }
-  const put = await fetch(presignedUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file })
-  if (!put.ok) throw new Error("UPLOAD_FAILED")
-  return finalUrl
+  const body = new FormData()
+  body.append("file", file)
+  const res = await fetch("/api/upload", { method: "POST", body })
+  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
+  if (!res.ok || !data.url) throw new Error(data.error ?? "UPLOAD_FAILED")
+  return data.url
 }

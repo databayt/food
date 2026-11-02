@@ -1,46 +1,58 @@
 import "server-only"
 
-import { randomUUID } from "crypto"
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { AwsClient } from "aws4fetch"
 
 /**
- * S3 image uploads (ported from mkan `src/lib/s3.ts`). Credentials are
- * OPTIONAL: without them presign returns null and the admin falls back to a
- * pasted image URL. Uploads go live once AWS_* env vars are set.
+ * Menu photo storage: S3 (databayt-cdn), served through the CDN
+ * (cdn.databayt.org). Uploads go browser → /api/upload → S3, so the bucket
+ * needs no CORS rule for PUT, and the request is signed with aws4fetch
+ * (fetch + WebCrypto) — the same code runs in Node and on the Workers
+ * runtime. Without the AWS_* env vars uploads are off and the admin pastes a
+ * photo URL instead.
  */
-const REGION = process.env.AWS_REGION || "eu-central-1"
 const PREFIX = "charles-burgers/menu"
 
-let client: S3Client | null = null
+/** Accepted photo types → stored extension. */
+export const UPLOAD_TYPES = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" } as const
+export type UploadType = keyof typeof UPLOAD_TYPES
+/** The browser already downsizes to 1200 px WebP (~150 KB); this only stops abuse. */
+export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+const region = () => process.env.AWS_REGION?.trim() || "us-east-1"
 
 export function isS3Configured(): boolean {
   return Boolean(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET)
 }
 
-function s3(): S3Client | null {
-  if (!isS3Configured()) return null
-  client ??= new S3Client({
-    region: REGION,
-    credentials: { accessKeyId: process.env.AWS_ACCESS_KEY_ID!, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY! },
-  })
-  return client
-}
-
 export function publicUrlForKey(key: string): string {
   const cdn = process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim()
-  return cdn ? `https://${cdn}/${key}` : `https://${process.env.AWS_S3_BUCKET}.s3.${REGION}.amazonaws.com/${key}`
+  return cdn ? `https://${cdn}/${key}` : `https://${process.env.AWS_S3_BUCKET}.s3.${region()}.amazonaws.com/${key}`
 }
 
-export async function presignImageUpload(contentType: string): Promise<{ presignedUrl: string; finalUrl: string } | null> {
-  const c = s3()
-  if (!c) return null
-  const ext = contentType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "webp"
-  const key = `${PREFIX}/${randomUUID()}.${ext}`
-  const presignedUrl = await getSignedUrl(
-    c,
-    new PutObjectCommand({ Bucket: process.env.AWS_S3_BUCKET!, Key: key, ContentType: contentType, CacheControl: "public, max-age=31536000, immutable" }),
-    { expiresIn: 300 }
-  )
-  return { presignedUrl, finalUrl: publicUrlForKey(key) }
+/** The bytes must really be the image type they claim (no HTML/SVG on the CDN). */
+export function looksLike(bytes: Uint8Array, type: UploadType): boolean {
+  const at = (offset: number, sig: number[]) => sig.every((b, i) => bytes[offset + i] === b)
+  if (type === "image/png") return at(0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+  if (type === "image/jpeg") return at(0, [0xff, 0xd8, 0xff])
+  return at(0, [0x52, 0x49, 0x46, 0x46]) && at(8, [0x57, 0x45, 0x42, 0x50]) // RIFF....WEBP
+}
+
+/** Store one menu photo; returns its public URL. Throws when S3 refuses it. */
+export async function uploadImage(bytes: Uint8Array<ArrayBuffer>, type: UploadType): Promise<string> {
+  const bucket = process.env.AWS_S3_BUCKET!
+  const aws = new AwsClient({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    region: region(),
+    service: "s3",
+    retries: 0, // the admin sees the error and taps again; no silent minute of backoff
+  })
+  const key = `${PREFIX}/${crypto.randomUUID()}.${UPLOAD_TYPES[type]}`
+  const headers = { "Content-Type": type, "Cache-Control": "public, max-age=31536000, immutable" }
+  const signed = await aws.sign(`https://${bucket}.s3.${region()}.amazonaws.com/${key}`, { method: "PUT", body: bytes, headers })
+  // Send the bytes ourselves, not the signed Request: a Request body goes out
+  // chunked, and S3 answers a PUT without Content-Length with 501.
+  const res = await fetch(signed.url, { method: "PUT", headers: signed.headers, body: bytes })
+  if (!res.ok) throw new Error(`S3 PUT ${res.status}`)
+  return publicUrlForKey(key)
 }

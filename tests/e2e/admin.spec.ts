@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
+import { AwsClient } from "aws4fetch"
 
 import { db, staffPage } from "./helpers"
 
@@ -52,6 +53,39 @@ test("@desktop the owner adds an item, reprices it, marks it sold out and archiv
   await guest.reload()
   await expect(card).toHaveCount(0)
   expect(await db.menuItem.findUnique({ where: { slug }, select: { isArchived: true, price: true } })).toEqual({ isArchived: true, price: 4500 })
+})
+
+test("@desktop a menu photo uploads to the CDN and shows on the guest menu", async ({ browser, page: guest }) => {
+  test.skip(!process.env.AWS_S3_BUCKET, "needs the S3 upload keys in .env")
+  const slug = `e2e-photo-${RUN}`
+  const admin = await staffPage(browser, "admin")
+  await admin.goto("/en/admin/menu/new")
+  await admin.locator("#item-en-name").fill("E2E Photo Burger")
+  await admin.getByTestId("item-price").fill("3900")
+  await admin.locator("#category").selectOption({ label: "Burgers" })
+  await admin.locator("#slug").fill(slug)
+
+  const uploaded = admin.waitForResponse((r) => r.url().endsWith("/api/upload"))
+  await admin.locator('input[type="file"]').setInputFiles("public/items/cheese-extra.webp")
+  const response = await uploaded
+  expect(response.status()).toBe(200)
+  const { url } = (await response.json()) as { url: string }
+  try {
+    expect(url).toMatch(/^https:\/\/cdn\.databayt\.org\/charles-burgers\/menu\/[0-9a-f-]{36}\.webp$/)
+    await expect(admin.locator("#imageUrl")).toHaveValue(url)
+    await save(admin, admin.getByTestId("save-item"))
+
+    expect((await fetch(url)).status).toBe(200)
+    await guest.goto("/en/order")
+    const img = guest.locator(`[data-item="${slug}"] img`).first()
+    await expect(img).toHaveAttribute("src", new RegExp(encodeURIComponent(url).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "|" + url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
+  } finally {
+    // Leave nothing behind on the shared CDN bucket.
+    const aws = new AwsClient({ accessKeyId: process.env.AWS_ACCESS_KEY_ID!, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!, region: process.env.AWS_REGION || "us-east-1", service: "s3" })
+    const key = new URL(url).pathname
+    const removed = await aws.fetch(`https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com${key}`, { method: "DELETE" })
+    expect([200, 204]).toContain(removed.status)
+  }
 })
 
 test("@desktop the owner adds a category and an extras group with a priced option", async ({ browser }) => {
