@@ -29,6 +29,7 @@
     "seed:test-staff": "tsx scripts/seed-test-staff.ts",
     "postinstall": "prisma generate",
     "check:rate-limit": "tsx --conditions=react-server scripts/check-rate-limit.ts",
+    "momo:smoke": "tsx --conditions=react-server scripts/momo-smoke.ts",
     "items:photos": "tsx scripts/process-item-photos.ts",
     "items:attach": "tsx scripts/set-item-photos.ts"
   },
