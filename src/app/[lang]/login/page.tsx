@@ -21,6 +21,7 @@ export default async function LoginPage({ params, searchParams }: PageProps<"/[l
   const sp = await searchParams
   const denied = sp.denied === "1"
   const callbackUrl = typeof sp.callbackUrl === "string" ? sp.callbackUrl : undefined
+  const returnedError = typeof sp.error === "string" ? sp.error : undefined
 
   // Already signed in (and not bounced for lack of role): go to the staff home.
   const session = await auth()
@@ -33,7 +34,7 @@ export default async function LoginPage({ params, searchParams }: PageProps<"/[l
       <main id="main-content" className="mx-auto flex max-w-sm flex-col px-4 py-12">
         <h1 className="text-2xl font-extrabold sm:text-3xl lg:text-3xl">{dict.auth.title}</h1>
         <p className="mb-8 mt-1">{dict.auth.hint}</p>
-        <LoginForm lang={lang} callbackUrl={callbackUrl} denied={denied} />
+        <LoginForm lang={lang} callbackUrl={callbackUrl} denied={denied} returnedError={returnedError} />
       </main>
     </>
   )

@@ -11,9 +11,29 @@ import { Label } from "@/components/ui/label"
 
 import { login } from "./actions"
 
-export function LoginForm({ lang, callbackUrl, denied }: { lang: Locale; callbackUrl?: string; denied?: boolean }) {
+/** Error codes the no-JS fallback can send back in `?error=`. */
+const RETURNED = new Set(["INVALID_CREDENTIALS", "RATE_LIMITED", "GENERIC"])
+
+export function LoginForm({
+  lang,
+  callbackUrl,
+  denied,
+  returnedError,
+}: {
+  lang: Locale
+  callbackUrl?: string
+  denied?: boolean
+  /** `?error=` from the no-JS fallback (/api/staff-login). */
+  returnedError?: string
+}) {
   const dict = useDictionary()
-  const [error, setError] = useState<string | null>(denied ? (dict?.auth?.denied ?? null) : null)
+  const errorText = (code: string) =>
+    code === "INVALID_CREDENTIALS"
+      ? (dict?.auth?.invalid ?? "Wrong email or password.")
+      : ((dict?.errors as Record<string, string> | undefined)?.[code] ?? dict?.errors?.GENERIC ?? null)
+  const [error, setError] = useState<string | null>(
+    returnedError && RETURNED.has(returnedError) ? errorText(returnedError) : denied ? (dict?.auth?.denied ?? null) : null
+  )
   const [pending, startTransition] = useTransition()
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,18 +42,17 @@ export function LoginForm({ lang, callbackUrl, denied }: { lang: Locale; callbac
     setError(null)
     startTransition(async () => {
       const res = await login({ email: data.get("email"), password: data.get("password") }, lang, callbackUrl)
-      if (res && !res.success) {
-        setError(
-          res.error === "INVALID_CREDENTIALS"
-            ? (dict?.auth?.invalid ?? "Wrong email or password.")
-            : ((dict?.errors as Record<string, string> | undefined)?.[res.error] ?? dict?.errors?.GENERIC ?? null)
-        )
-      }
+      if (res && !res.success) setError(errorText(res.error))
     })
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    // method + action only matter before hydration: the browser then POSTs the
+    // body to the fallback route instead of a GET that would put the password
+    // in the URL. After hydration onSubmit takes over (server action).
+    <form method="post" action="/api/staff-login" onSubmit={onSubmit} className="space-y-4" noValidate>
+      <input type="hidden" name="lang" value={lang} />
+      {callbackUrl && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
       <div className="space-y-2">
         <Label htmlFor="email">{dict?.auth?.email ?? "Email"}</Label>
         <Input id="email" name="email" type="email" autoComplete="username" required dir="ltr" className="h-12 text-base" />
