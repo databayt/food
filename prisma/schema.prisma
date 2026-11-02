@@ -8,6 +8,14 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+// CommonJS twin for the Playwright suite only: Playwright compiles specs to
+// CJS, and the app's ESM client uses import.meta. Never imported by the app.
+generator e2e {
+  provider     = "prisma-client"
+  output       = "../tests/e2e/.prisma"
+  moduleFormat = "cjs"
+}
+
 datasource db {
   provider = "postgresql"
 }

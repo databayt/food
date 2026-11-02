@@ -1,6 +1,6 @@
 import "dotenv/config"
 
-import { db } from "../../src/lib/db"
+import { db } from "./db"
 
 /** Remove every order and customer created by the e2e suite. */
 export default async function globalTeardown() {

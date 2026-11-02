@@ -4,7 +4,7 @@ import { chromium, type FullConfig } from "@playwright/test"
 import bcrypt from "bcryptjs"
 import { mkdirSync } from "node:fs"
 
-import { db } from "../../src/lib/db"
+import { db } from "./db"
 
 export const TEST_STAFF = {
   cashier: { email: "cashier@test.charlesburgers.rw", name: "Test Cashier", role: "CASHIER" as const },
