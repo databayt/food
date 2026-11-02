@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { CategoriesContent } from "@/components/admin/categories/content"
-import { draftFrom } from "@/components/admin/translation-fields"
+import { draftFrom } from "@/components/admin/translation-draft"
 import { isLocale } from "@/components/internationalization/config"
 import { requireRole } from "@/lib/auth"
 import { db } from "@/lib/db"

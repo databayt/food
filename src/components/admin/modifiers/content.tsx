@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
-import { emptyDraft, TranslationFields, type TranslationDraft } from "../translation-fields"
+import { emptyDraft, type TranslationDraft } from "../translation-draft"
+import { TranslationFields } from "../translation-fields"
 import { useAdminAction } from "../use-admin-action"
 import { saveGroup, saveOption } from "./actions"
 

@@ -6,19 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-export type TranslationDraft = Record<Locale, { name: string; description: string }>
+import type { TranslationDraft } from "./translation-draft"
 
-export function emptyDraft(): TranslationDraft {
-  return Object.fromEntries(i18n.locales.map((l) => [l, { name: "", description: "" }])) as TranslationDraft
-}
-
-export function draftFrom(rows: { locale: string; name: string; description?: string | null }[]): TranslationDraft {
-  const draft = emptyDraft()
-  for (const r of rows) {
-    if (r.locale in draft) draft[r.locale as Locale] = { name: r.name, description: r.description ?? "" }
-  }
-  return draft
-}
+export type { TranslationDraft } from "./translation-draft"
 
 /** Name (+ description) per locale — en, rw, ar side by side, each in its own direction. */
 export function TranslationFields({

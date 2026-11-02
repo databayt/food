@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 
 import { ItemForm } from "@/components/admin/menu/form"
 import { getEditorOptions } from "@/components/admin/menu/queries"
-import { emptyDraft } from "@/components/admin/translation-fields"
+import { emptyDraft } from "@/components/admin/translation-draft"
 import { isLocale } from "@/components/internationalization/config"
 import { requireRole } from "@/lib/auth"
 

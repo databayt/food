@@ -27,8 +27,12 @@ const TIER_CONFIG = {
   "momo-order": { limit: 6, windowMs: 10 * 60_000, window: "10 m" },
   /** Guest order-status polling — per client IP. */
   track: { limit: 120, windowMs: 60_000, window: "1 m" },
-  /** Staff login attempts — per IP. */
-  auth: { limit: 5, windowMs: 10 * 60_000, window: "10 m" },
+  /**
+   * Staff login attempts — per IP. The whole restaurant shares one counter
+   * Wi-Fi (or one carrier NAT), so 5 locked everyone out after a few typos;
+   * with bcrypt and real passwords 20 per 10 min is still no brute force.
+   */
+  auth: { limit: 20, windowMs: 10 * 60_000, window: "10 m" },
   /** Staff mutations — per user. */
   mutation: { limit: 60, windowMs: 60_000, window: "1 m" },
   /** Image uploads — per user. */
