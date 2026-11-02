@@ -24,7 +24,6 @@ test("the Arabic checkout keeps phone input left-to-right", async ({ page }) => 
   await page.locator('[data-item="classic-beef-burger"]').click()
   await page.getByTestId("add-to-order").click()
   await page.getByTestId("cart-bar").click()
-  await page.getByTestId("go-checkout").click()
   await expect(page.locator('input[name="phone"]')).toHaveAttribute("dir", "ltr")
   await expect(page.getByTestId("place-order")).toContainText("RWF")
 })

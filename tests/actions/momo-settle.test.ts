@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const state = vi.hoisted(() => ({
   attempt: { id: "a1", paymentId: "p1", referenceId: "ref-1", status: "PENDING", lastCheckedAt: null as Date | null, financialTransactionId: null as string | null },
   payment: { id: "p1", orderId: "o1", status: "PENDING", reference: null as string | null },
-  history: [] as { event: string; note: string | null }[],
+  order: { id: "o1", status: "NEW", placedAt: new Date() as Date | null, confirmedAt: null as Date | null },
+  /** expireUnpaidOrders' query matches (old, no prompt out) — the mock can't evaluate it. */
+  stale: false,
+  history: [] as { event: string; note: string | null; from?: string; to?: string }[],
   mtn: { status: "SUCCESSFUL", financialTransactionId: "987654321", reason: null as string | null },
 }))
 
@@ -35,19 +38,30 @@ vi.mock("@/lib/db", () => {
       return { count: 1 }
     }),
   }
+  const order = {
+    findMany: vi.fn(async () => (state.stale && state.order.status === "AWAITING_PAYMENT" ? [{ id: state.order.id }] : [])),
+    updateMany: vi.fn(async ({ where, data }: { where: { status?: string; placedAt?: null }; data: Record<string, unknown> }) => {
+      if (where.status && where.status !== state.order.status) return { count: 0 }
+      if ("placedAt" in where && state.order.placedAt !== null) return { count: 0 }
+      Object.assign(state.order, data)
+      return { count: 1 }
+    }),
+  }
   const orderStatusHistory = {
     create: vi.fn(async ({ data }: { data: { event: string; note: string | null } }) => state.history.push(data)),
   }
-  const tx = { paymentAttempt, payment, orderStatusHistory }
+  const tx = { paymentAttempt, payment, order, orderStatusHistory }
   return { db: { ...tx, $transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) } }
 })
 
-import { refreshByReference, refreshPendingAttempts } from "@/components/order/payment/settle"
+import { expireUnpaidOrders, refreshByReference, refreshPendingAttempts } from "@/components/order/payment/settle"
 
 describe("MoMo settlement", () => {
   beforeEach(() => {
     Object.assign(state.attempt, { status: "PENDING", lastCheckedAt: null, financialTransactionId: null })
     Object.assign(state.payment, { status: "PENDING", reference: null })
+    Object.assign(state.order, { status: "NEW", placedAt: new Date(), confirmedAt: null })
+    state.stale = false
     state.history = []
     state.mtn = { status: "SUCCESSFUL", financialTransactionId: "987654321", reason: null }
   })
@@ -75,5 +89,54 @@ describe("MoMo settlement", () => {
     state.payment.status = "PAID"
     await refreshPendingAttempts("p1")
     expect(state.history).toEqual([{ orderId: "o1", event: "PAYMENT_DUPLICATE", note: "987654321" }])
+  })
+
+  it("places a pay-then-place order the moment MTN confirms — straight to the kitchen", async () => {
+    Object.assign(state.order, { status: "AWAITING_PAYMENT", placedAt: null })
+    await refreshPendingAttempts("p1")
+    expect(state.order.status).toBe("CONFIRMED")
+    expect(state.order.placedAt).toBeInstanceOf(Date)
+    expect(state.order.confirmedAt).toBeInstanceOf(Date)
+    expect(state.payment).toMatchObject({ status: "PAID", method: "MOMO" })
+    expect(state.history.map((h) => h.event)).toEqual(["PAYMENT_PAID", "STATUS"])
+    expect(state.history[1]).toMatchObject({ from: "AWAITING_PAYMENT", to: "CONFIRMED" })
+  })
+
+  it("places once when the callback races two polls", async () => {
+    Object.assign(state.order, { status: "AWAITING_PAYMENT", placedAt: null })
+    await Promise.all([refreshByReference("ref-1"), refreshPendingAttempts("p1"), refreshByReference("ref-1")])
+    expect(state.history.filter((h) => h.event === "STATUS")).toHaveLength(1)
+    expect(state.order.status).toBe("CONFIRMED")
+  })
+
+  it("keeps a declined order unplaced — no staff screen sees it", async () => {
+    Object.assign(state.order, { status: "AWAITING_PAYMENT", placedAt: null })
+    state.mtn = { status: "REJECTED", financialTransactionId: null as unknown as string, reason: "APPROVAL_REJECTED" }
+    await refreshPendingAttempts("p1")
+    expect(state.order).toMatchObject({ status: "AWAITING_PAYMENT", placedAt: null })
+  })
+
+  it("surfaces money that landed on an expired order, so staff refund it", async () => {
+    Object.assign(state.order, { status: "CANCELLED", placedAt: null })
+    await refreshPendingAttempts("p1")
+    expect(state.payment.status).toBe("PAID")
+    expect(state.order.status).toBe("CANCELLED")
+    expect(state.order.placedAt).toBeInstanceOf(Date)
+  })
+
+  it("cancels an unpaid order nobody is paying any more", async () => {
+    Object.assign(state.order, { status: "AWAITING_PAYMENT", placedAt: null })
+    state.stale = true
+    await expireUnpaidOrders("o1")
+    expect(state.order.status).toBe("CANCELLED")
+    expect(state.history).toEqual([{ orderId: "o1", from: "AWAITING_PAYMENT", to: "CANCELLED", event: "STATUS", note: "UNPAID" }])
+  })
+
+  it("never expires an order that was paid in the meantime", async () => {
+    Object.assign(state.order, { status: "CONFIRMED" })
+    state.stale = true
+    await expireUnpaidOrders("o1")
+    expect(state.order.status).toBe("CONFIRMED")
+    expect(state.history).toEqual([])
   })
 })

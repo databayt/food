@@ -36,6 +36,7 @@ import { riderMessage, shareOnWhatsApp, type RiderTemplates } from "./rider-mess
 import type { CashierOrder } from "./types"
 
 const STATUS_TONE: Record<string, string> = {
+  AWAITING_PAYMENT: "bg-muted text-muted-foreground",
   NEW: "bg-primary text-primary-foreground",
   CONFIRMED: "bg-sky-100 text-sky-900",
   PREPARING: "bg-amber-100 text-amber-900",
@@ -102,6 +103,7 @@ export function OrderCard({
       interpolate(dict?.cashier?.dispatched ?? "Order #{number} is on the way", { number: order.number })
     )
 
+  const customerName = order.customerName || (dict?.cashier?.walkIn ?? "Walk-in")
   const customerChat = whatsAppHref(
     order.customerPhone,
     interpolate(dict?.cashier?.customerMessage, { name: order.customerName, restaurant: BRAND_NAME, number: order.number })
@@ -131,7 +133,7 @@ export function OrderCard({
         <div>
           {/* i18n-exempt — order number token */}
           <h3 className="text-2xl font-extrabold tabular-nums sm:text-2xl lg:text-2xl">#{order.number}</h3>
-          <Elapsed since={order.createdAt} now={now} className="text-xs" />
+          <Elapsed since={order.placedAt} now={now} className="text-xs" />
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_TONE[order.status])}>
@@ -157,11 +159,13 @@ export function OrderCard({
       </header>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <span className="font-semibold text-foreground">{order.customerName}</span>
-        <a href={`tel:${order.customerPhone}`} className="inline-flex items-center gap-1 text-muted-foreground underline-offset-2 hover:underline">
-          <Phone className="size-3.5" />
-          <bdi dir="ltr">{formatLocalPhone(order.customerPhone)}</bdi>
-        </a>
+        <span className="font-semibold text-foreground">{customerName}</span>
+        {order.customerPhone && (
+          <a href={`tel:${order.customerPhone}`} className="inline-flex items-center gap-1 text-muted-foreground underline-offset-2 hover:underline">
+            <Phone className="size-3.5" />
+            <bdi dir="ltr">{formatLocalPhone(order.customerPhone)}</bdi>
+          </a>
+        )}
         <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
           {order.fulfillment === "PICKUP" ? <Store className="size-3.5" /> : <Bike className="size-3.5" />}
           {dict?.enums?.fulfillment?.[order.fulfillment]}

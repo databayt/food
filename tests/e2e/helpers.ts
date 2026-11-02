@@ -1,6 +1,6 @@
 import { expect, type Browser, type Page } from "@playwright/test"
 
-import { db } from "../../src/lib/db"
+import { db } from "./db"
 import { authFile, type TEST_STAFF } from "./global-setup"
 
 export { db }
@@ -34,10 +34,9 @@ export async function addBurgerWithCheese(page: Page) {
   await expect(page.getByRole("dialog")).toBeHidden()
 }
 
+/** The cart bar opens checkout directly — the cart lives on that page. */
 export async function goToCheckout(page: Page, lang = "en") {
   await page.getByTestId("cart-bar").click()
-  await page.waitForURL(`**/${lang}/order/cart`)
-  await page.getByTestId("go-checkout").click()
   await page.waitForURL(`**/${lang}/order/checkout`)
 }
 
@@ -48,7 +47,10 @@ export async function fillCheckout(
     phone?: string
     fulfillment?: "PICKUP" | "DELIVERY"
     address?: string
+    /** Defaults to CASH — MoMo leads the form whenever MTN keys are configured. */
     payment?: "CASH" | "MOMO"
+    /** "Pay from another MoMo number" (push-to-pay only). */
+    momoPhone?: string
     /** Tap "Share my location" (grant geolocation on the context first). */
     shareLocation?: boolean
   }
@@ -63,8 +65,15 @@ export async function fillCheckout(
       await expect(page.getByTestId("location-attached")).toBeVisible()
     }
   }
-  if (opts.payment === "MOMO") await page.getByTestId("paymentMethod-MOMO").click()
+  await page.getByTestId(`paymentMethod-${opts.payment ?? "CASH"}`).click()
+  if (opts.momoPhone) {
+    await page.getByTestId("momo-other-number").click()
+    await page.getByTestId("momo-phone").fill(opts.momoPhone)
+  }
 }
+
+/** MTN sandbox keys are in the env: MoMo is push-to-pay (pay-then-place). */
+export const momoSandbox = !!process.env.MOMO_API_KEY && process.env.MOMO_TARGET_ENV === "sandbox"
 
 /** Full guest order from the menu; returns the confirmation number + token. */
 export async function placeOrder(page: Page, name: string, opts: Omit<Parameters<typeof fillCheckout>[1], "name"> = {}) {

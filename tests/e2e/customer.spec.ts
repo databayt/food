@@ -17,11 +17,10 @@ test("menu loads with the banner, photo cards and RWF prices, without horizontal
   expect(overflow).toBeLessThanOrEqual(0)
 })
 
-test("empty cart shows an empty state and checkout bounces back", async ({ page }) => {
+test("an empty order shows its empty state on checkout; the old cart link lands there", async ({ page }) => {
   await page.goto("/en/order/cart")
+  await expect(page).toHaveURL(/\/en\/order\/checkout$/)
   await expect(page.getByTestId("cart-empty")).toBeVisible()
-  await page.goto("/en/order/checkout")
-  await expect(page).toHaveURL(/\/en\/order\/cart$/)
 })
 
 test("cart quantities update the total and lines can be removed", async ({ page }) => {

@@ -19,6 +19,7 @@ import {
 import { MAX_QUANTITY } from "@/lib/order/pricing";
 import { cn } from "@/lib/utils";
 
+import type { CartLine } from "../cart/types";
 import { useCart } from "../cart/use-cart";
 import { NOTE_PRESETS, type NoteKey } from "./option-images";
 import type { MenuItemView, MenuModifierGroup, MenuOption } from "./types";
@@ -47,10 +48,13 @@ export function ItemSheet({
   item,
   open,
   onOpenChange,
+  onAdd,
 }: {
   item: MenuItemView | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Add somewhere other than the guest cart (the counter POS ticket). */
+  onAdd?: (line: Omit<CartLine, "key">) => void;
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -68,6 +72,7 @@ export function ItemSheet({
           <ItemForm
             key={item.id}
             item={item}
+            onAdd={onAdd}
             onDone={() => onOpenChange(false)}
           />
         )}
@@ -78,13 +83,15 @@ export function ItemSheet({
 
 function ItemForm({
   item,
+  onAdd,
   onDone,
 }: {
   item: MenuItemView;
+  onAdd?: (line: Omit<CartLine, "key">) => void;
   onDone: () => void;
 }) {
   const dict = useDictionary();
-  const add = useCart((s) => s.add);
+  const addToCart = useCart((s) => s.add);
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState<NoteKey[]>([]);
   // Preselect the first available option of every required single-choice group.
@@ -129,8 +136,12 @@ function ItemForm({
       .filter((p) => notes.includes(p.key))
       .map((p) => p.en)
       .join(", ");
-    add({ itemId: item.id, optionIds: selected, quantity, note });
-    toast.success(dict?.order?.added ?? "Added to your order");
+    const line = { itemId: item.id, optionIds: selected, quantity, note };
+    if (onAdd) onAdd(line);
+    else {
+      addToCart(line);
+      toast.success(dict?.order?.added ?? "Added to your order");
+    }
     onDone();
   };
 

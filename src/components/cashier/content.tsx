@@ -43,7 +43,7 @@ export function CashierContent({ lang, initial }: { lang: Locale; initial: Cashi
   const inColumn = (col: Column) =>
     orders
       .filter((o) => col.statuses.includes(o.status))
-      .sort((a, b) => (col.key === "DONE" ? b.number - a.number : a.number - b.number))
+      .sort((a, b) => (col.key === "DONE" ? b.number - a.number : a.placedAt.localeCompare(b.placedAt) || a.number - b.number))
 
   return (
     <main id="main-content" className="mx-auto max-w-7xl px-4 py-4">

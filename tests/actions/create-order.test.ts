@@ -10,6 +10,23 @@ const state = vi.hoisted(() => ({
   settings: null as Record<string, unknown> | null,
   menu: [] as unknown[],
   rateLimited: false,
+  /** MTN Request-to-Pay configured (sandbox). */
+  momo: false,
+}))
+
+vi.mock("@/lib/momo/config", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/lib/momo/config")>()
+  return {
+    ...real,
+    getMomoConfig: () =>
+      state.momo
+        ? { baseUrl: "x", targetEnv: "mtnrwanda", subscriptionKey: "s", apiUser: "u", apiKey: "k", callbackUrl: null, currency: "RWF" }
+        : null,
+  }
+})
+
+vi.mock("@/components/order/payment/prompt", () => ({
+  sendMomoPrompt: vi.fn(async () => ({ ok: true, attemptId: "att-1" })),
 }))
 
 vi.mock("@/generated/prisma/client", () => {
@@ -74,7 +91,8 @@ vi.mock("@/lib/db", async () => {
             }
             staged.push(["order.create", args])
             seq += 1
-            return { number: seq, publicToken: args.data.publicToken }
+            const data = args.data as unknown as { status: string }
+            return { id: `ord-${seq}`, number: seq, publicToken: args.data.publicToken, status: data.status, payment: { id: `pay-${seq}` } }
           }),
         },
       }
@@ -87,6 +105,7 @@ vi.mock("@/lib/db", async () => {
 })
 
 import { createOrder } from "@/components/order/checkout/actions"
+import { sendMomoPrompt } from "@/components/order/payment/prompt"
 import { db } from "@/lib/db"
 import { assertRateLimit } from "@/lib/rate-limit"
 
@@ -138,6 +157,7 @@ beforeEach(() => {
   state.settings = { ...SETTINGS }
   state.menu = structuredClone(MENU)
   state.rateLimited = false
+  state.momo = false
 })
 
 // ---- tests -----------------------------------------------------------------
@@ -346,5 +366,65 @@ describe("createOrder — atomicity", () => {
     const res = await createOrder(input())
     expect(res).toMatchObject({ success: false, error: "GENERIC" })
     expect(state.committed).toEqual([])
+  })
+})
+
+describe("createOrder — MoMo pay-then-place", () => {
+  const momoOrder = () => committedOrder() as unknown as { status: string; placedAt: Date | null; payment: { create: Record<string, unknown> } }
+
+  it("writes the order unplaced and sends the PIN prompt to the checkout phone", async () => {
+    state.momo = true
+    const res = await createOrder(input({ paymentMethod: "MOMO" }))
+    expect(res).toMatchObject({ success: true, data: { awaitingPayment: true } })
+    const number = res.success ? res.data.number : 0
+    expect(momoOrder()).toMatchObject({ status: "AWAITING_PAYMENT", placedAt: null })
+    expect(sendMomoPrompt).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(sendMomoPrompt).mock.calls[0]![1]).toEqual({ paymentId: `pay-${number}`, orderNumber: number, amount: 7000, payer: "+250781234567" })
+  })
+
+  it("pays from another number when one is given", async () => {
+    state.momo = true
+    await createOrder(input({ paymentMethod: "MOMO", phone: "073 123 4567", momoPhone: "079 555 0000" }))
+    expect(vi.mocked(sendMomoPrompt).mock.calls[0]![1]).toMatchObject({ payer: "+250795550000" })
+  })
+
+  it("rejects a non-MTN payer before writing anything, asking for an MTN number to pay from", async () => {
+    state.momo = true
+    const res = await createOrder(input({ paymentMethod: "MOMO", phone: "073 123 4567" }))
+    expect(res).toMatchObject({ success: false, error: "MOMO_NUMBER_INVALID", errors: { momoPhone: "MOMO_NUMBER_INVALID" } })
+    expect(db.$transaction).not.toHaveBeenCalled()
+    expect(sendMomoPrompt).not.toHaveBeenCalled()
+  })
+
+  it("flags the other-number field when that is the bad one", async () => {
+    state.momo = true
+    const res = await createOrder(input({ paymentMethod: "MOMO", momoPhone: "0731234567" }))
+    expect(res).toMatchObject({ success: false, errors: { momoPhone: "MOMO_NUMBER_INVALID" } })
+  })
+
+  it("never sends a second prompt for a repeated submit", async () => {
+    state.momo = true
+    const first = await createOrder(input({ paymentMethod: "MOMO" }))
+    if (!first.success) throw new Error("first submit failed")
+    state.existingByKey.set(KEY, { number: first.data.number, publicToken: first.data.token, status: "AWAITING_PAYMENT" } as never)
+    const second = await createOrder(input({ paymentMethod: "MOMO" }))
+    expect(second).toEqual(first)
+    expect(sendMomoPrompt).toHaveBeenCalledTimes(1)
+  })
+
+  it("keeps cash orders placed at once, with no prompt", async () => {
+    state.momo = true
+    const res = await createOrder(input({ paymentMethod: "CASH" }))
+    expect(res.success && res.data.awaitingPayment).toBeFalsy()
+    expect(momoOrder().status).toBe("NEW")
+    expect(momoOrder().placedAt).toBeInstanceOf(Date)
+    expect(sendMomoPrompt).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the manual merchant code without the MTN keys", async () => {
+    const res = await createOrder(input({ paymentMethod: "MOMO" }))
+    expect(res.success && res.data.awaitingPayment).toBeFalsy()
+    expect(momoOrder().status).toBe("NEW")
+    expect(sendMomoPrompt).not.toHaveBeenCalled()
   })
 })

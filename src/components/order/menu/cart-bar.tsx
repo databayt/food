@@ -26,7 +26,7 @@ export function CartBar({ lang, menu }: { lang: Locale; menu: MenuView }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
       <Link
-        href={`/${lang}/order/cart`}
+        href={`/${lang}/order/checkout`}
         className="mx-auto flex h-14 max-w-lg items-center gap-3 rounded-full bg-primary px-5 text-primary-foreground shadow-lg transition-transform active:scale-[0.98]"
         data-testid="cart-bar"
       >

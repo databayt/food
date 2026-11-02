@@ -7,10 +7,16 @@ import type { OrderStatus, UserRole } from "@/generated/prisma/client"
  *
  *   NEW → CONFIRMED → PREPARING → READY → COMPLETED
  *   any non-terminal → CANCELLED
+ *
+ * AWAITING_PAYMENT sits before the flow: a MoMo push-to-pay order no staff
+ * screen shows. Only the system moves it — MTN's confirmation places it as
+ * CONFIRMED (payment/settle.ts), "pay cash instead" releases it as NEW, and
+ * an unpaid one expires to CANCELLED.
  */
 export const ORDER_FLOW = ["NEW", "CONFIRMED", "PREPARING", "READY", "COMPLETED"] as const satisfies readonly OrderStatus[]
 
 export const TERMINAL_STATUSES: readonly OrderStatus[] = ["COMPLETED", "CANCELLED"]
+/** What staff work on. AWAITING_PAYMENT is deliberately absent. */
 export const ACTIVE_STATUSES: readonly OrderStatus[] = ["NEW", "CONFIRMED", "PREPARING", "READY"]
 
 const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -43,6 +49,8 @@ export function isValidTransition(from: OrderStatus, to: OrderStatus): boolean {
 /** Is `role` allowed to move an order `from → to`? */
 export function canTransition(from: OrderStatus, to: OrderStatus, role: UserRole): boolean {
   if (!isValidTransition(from, to)) return false
+  // Staff never touch an order the guest hasn't paid for yet.
+  if (from === "AWAITING_PAYMENT") return false
   if (role === "ADMIN" || role === "CASHIER") return true
   if (role === "KITCHEN") return KITCHEN_TRANSITIONS.some(([f, t]) => f === from && t === to)
   return false

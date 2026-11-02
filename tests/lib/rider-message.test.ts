@@ -10,6 +10,7 @@ const ORDER: CashierOrder = {
   status: "READY",
   fulfillment: "DELIVERY",
   createdAt: "2026-09-26T10:00:00.000Z",
+  placedAt: "2026-09-26T10:00:00.000Z",
   customerName: "Aline Uwase",
   customerPhone: "+250781234567",
   deliveryAddress: "KG 11 Ave, blue gate after the pharmacy",

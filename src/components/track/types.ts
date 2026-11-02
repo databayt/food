@@ -10,6 +10,8 @@ export type TrackedOrder = {
   updatedAt: string
   /** Delivery only: the rider left with the order. */
   dispatchedAt: string | null
+  /** Staff have seen it. False while AWAITING_PAYMENT, and for one cancelled unpaid. */
+  placed: boolean
   subtotal: number
   deliveryFee: number
   total: number

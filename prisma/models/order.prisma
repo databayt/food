@@ -2,6 +2,9 @@
 // edits never rewrite history. Totals are computed server-side only.
 
 enum OrderStatus {
+  /// MoMo push-to-pay sent, waiting for the guest's PIN. Staff never see it:
+  /// MTN's confirmation places it as CONFIRMED, an unpaid one is cancelled.
+  AWAITING_PAYMENT
   NEW
   CONFIRMED
   PREPARING
@@ -59,9 +62,10 @@ model Order {
   fulfillment    FulfillmentType
   locale         String          @default("en")
 
-  customerId       String
+  /// Null for a counter (POS) walk-in who gave no phone.
+  customerId       String?
   customerName     String
-  customerPhone    String
+  customerPhone    String?
   deliveryAddress  String?
   /// Optional pin the guest shared at checkout (browser geolocation), so the
   /// rider can navigate where Kigali street addresses run out.
@@ -75,6 +79,9 @@ model Order {
   deliveryFee Int @default(0)
   total       Int
 
+  /// When staff first see the order: at checkout for cash, at MTN's
+  /// confirmation for pay-then-place MoMo. Null = never placed (unpaid).
+  placedAt     DateTime?
   confirmedAt  DateTime?
   preparingAt  DateTime?
   readyAt      DateTime?
@@ -86,7 +93,7 @@ model Order {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  customer Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customer Customer?            @relation(fields: [customerId], references: [id], onDelete: Restrict)
   items    OrderItem[]
   payment  Payment?
   history  OrderStatusHistory[]

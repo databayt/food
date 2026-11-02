@@ -44,6 +44,8 @@ export const CreateOrderSchema = z
     address: z.string().max(200, "TOO_LONG").optional().transform((v) => (v ? sanitizeInput(v) : "")),
     location: DeliveryPinSchema.nullable().default(null),
     paymentMethod: z.enum(["CASH", "MOMO"]),
+    /** MoMo push-to-pay from another number; empty = the phone above. Checked against MTN rules in the action. */
+    momoPhone: z.string().trim().max(20, "MOMO_NUMBER_INVALID").optional().transform((v) => v ?? ""),
     note: z.string().max(280, "TOO_LONG").optional().transform((v) => (v ? sanitizeMultiline(v) : "")),
     lines: z.array(CartLineInputSchema).min(1, "EMPTY_CART").max(MAX_LINES, "TOO_LONG"),
   })
@@ -77,6 +79,7 @@ export const CheckoutFormSchema = z
     fulfillment: z.enum(["PICKUP", "DELIVERY"]),
     address: z.string().max(200, "TOO_LONG"),
     paymentMethod: z.enum(["CASH", "MOMO"]),
+    momoPhone: z.string().max(20, "MOMO_NUMBER_INVALID"),
     note: z.string().max(280, "TOO_LONG"),
   })
   .superRefine((data, ctx) => {

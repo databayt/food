@@ -118,7 +118,7 @@ function KitchenTicket({
             {order.fulfillment === "PICKUP" ? <Store className="size-4" /> : <Bike className="size-4" />}
             {dict?.enums?.fulfillment?.[order.fulfillment]}
           </span>
-          <Elapsed since={order.createdAt} now={now} className="text-sm" />
+          <Elapsed since={order.placedAt} now={now} className="text-sm" />
         </div>
       </header>
       <OrderItems items={order.items} large />

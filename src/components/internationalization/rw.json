@@ -94,7 +94,6 @@
     "subtotal": "Igiteranyo gito",
     "deliveryFee": "Amafaranga yo kukugezaho",
     "total": "Igiteranyo",
-    "checkout": "Komeza wishyure",
     "addMore": "Ongeramo ibindi",
     "each": "{price} kimwe",
     "note": "Icyitonderwa"
@@ -133,9 +132,13 @@
     "locationError": "Ntitwabashije kubona aho uri. Sobanura aho hantu muri aderesi.",
     "viewOnMap": "Reba ku ikarita",
     "removeLocation": "Kuraho",
-    "momoPushHint": "Uzabona ubutumwa kuri telefone yawe. Shyiramo PIN ya MoMo wishyure.",
     "momoNumber": "Nimero ya MoMo",
-    "momoNumberHint": "Siga ubusa ukoreshe nimero iri hejuru. Nimero za MTN gusa (078/079)."
+    "momoNumberHint": "Siga ubusa ukoreshe nimero iri hejuru. Nimero za MTN gusa (078/079).",
+    "payWithMomo": "Ishyura {total} na MoMo",
+    "sendingPrompt": "Turohereza ubutumwa bwa PIN…",
+    "addNote": "Ongeraho ubutumwa ku gikoni",
+    "momoOtherNumber": "Ishyura ukoresheje indi nimero ya MoMo",
+    "momoPayHint": "Ubutaha, emeza kwishyura ukoresheje PIN ya MoMo. Komande yoherezwa ukimara kwishyura."
   },
   "track": {
     "title": "Komande #{number}",
@@ -149,7 +152,9 @@
       "READY_DELIVERY": "Byateguwe. Umumotari agiye kubikuzanira.",
       "COMPLETED": "Byarangiye. Uryoherwe!",
       "CANCELLED": "Iyi komande yahagaritswe.",
-      "ON_THE_WAY": "Biri mu nzira bikugana!"
+      "ON_THE_WAY": "Biri mu nzira bikugana!",
+      "AWAITING_PAYMENT": "Dutegereje ko wishyura na MoMo.",
+      "UNPAID": "Ntiyishyuwe ku gihe, bityo iyi komande yahagaritswe. Nta mafaranga yakuweho."
     },
     "placedAt": "Yoherejwe saa {time}",
     "items": "Ibyo watumije",
@@ -182,7 +187,12 @@
     "momoNumberPlaceholder": "Nimero ya MoMo (ubusa = nimero watanze)",
     "momoSend": "Ohereza ubutumwa bwo kwishyura kuri telefone yanjye",
     "momoResend": "Ongera wohereze",
-    "momoManual": "Cyangwa wishyure ukoresheje kode y'umucuruzi"
+    "momoManual": "Cyangwa wishyure ukoresheje kode y'umucuruzi",
+    "payToPlace": "Ishyura kugira ngo komande yoherezwe",
+    "momoPlaceHint": "Komande yawe ijya mu gikoni ukimara kwishyura.",
+    "momoOtherNumber": "Ishyura ukoresheje indi nimero",
+    "payCashInstead": "Nzishyura mu ntoki",
+    "paidPlaced": "Wishyuye — komande yawe yoherejwe!"
   },
   "auth": {
     "title": "Kwinjira kw'abakozi",
@@ -198,7 +208,8 @@
     "nav": {
       "queue": "Komande",
       "kitchen": "Igikoni",
-      "admin": "Ubuyobozi"
+      "admin": "Ubuyobozi",
+      "pos": "Komande nshya"
     },
     "live": "Ako kanya",
     "reconnecting": "Birimo kongera guhuza…",
@@ -258,7 +269,8 @@
       "collect": "Akira: {amount} ({method})",
       "paid": "Byishyuwe — ntacyo wakira."
     },
-    "momoAuto": "MoMo yikora"
+    "momoAuto": "MoMo yikora",
+    "walkIn": "Umukiriya wa hano"
   },
   "kitchen": {
     "title": "Igikoni",
@@ -266,6 +278,46 @@
     "preparing": "Birimo gutegurwa",
     "empty": "Nta cyo guteka ubu.",
     "emptyHint": "Komande zemejwe ziza hano ubwazo."
+  },
+  "pos": {
+    "title": "Komande nshya",
+    "ticket": "Itike",
+    "clear": "Siba",
+    "empty": "Kanda ku kintu ucyongeremo.",
+    "options": "Amahitamo",
+    "added": "{name} cyongeweho",
+    "customer": "Umukiriya",
+    "name": "Izina (si ngombwa)",
+    "phone": "Telefoni",
+    "phoneOptional": "Telefoni (si ngombwa)",
+    "address": "Aderesi yo kugezaho",
+    "note": "Ubutumwa ku gikoni (si ngombwa)",
+    "payment": "Kwishyura",
+    "cash": "Mu ntoki",
+    "momo": "MoMo",
+    "received": "Byakiriwe",
+    "exact": "Neza neza",
+    "change": "Ibisigaye {amount}",
+    "short": "Haburaho {amount}",
+    "charge": "Ishyuza {total}",
+    "codCharge": "Ohereza mu gikoni · {total} bishyurwa ku muryango",
+    "sendPrompt": "Ohereza PIN · {total}",
+    "waiting": "Dutegereje PIN kuri {phone}",
+    "waitingHint": "Komande ijya mu gikoni MTN ikimara kwemeza.",
+    "sendAgain": "Ongera wohereze",
+    "switchToCash": "Akira amafaranga mu ntoki",
+    "cancelPayment": "Reka",
+    "paid": "Byishyuwe — komande #{number} iri mu gikoni",
+    "placed": "Komande #{number} iri mu gikoni",
+    "changeDue": "Subiza: {amount}",
+    "collectOnDelivery": "Umumotari yakira {amount}",
+    "newTicket": "Itike nshya",
+    "print": "Sohora inyemezabuguzi",
+    "viewTicket": "Itike · {count}",
+    "receiptThanks": "Murakoze!",
+    "receiptPaid": "Byishyuwe",
+    "receiptUnpaid": "Bizishyurwa ku muryango",
+    "changeLabel": "Ibisigaye"
   },
   "admin": {
     "title": "Ubuyobozi",
@@ -400,6 +452,7 @@
   },
   "enums": {
     "orderStatus": {
+      "AWAITING_PAYMENT": "Itegereje kwishyurwa",
       "NEW": "Nshya",
       "CONFIRMED": "Yemejwe",
       "PREPARING": "Irimo gutegurwa",
@@ -467,7 +520,9 @@
     "MOMO_UNAVAILABLE": "MoMo ntiri gusubiza ubu. Ongera ugerageze, cyangwa wishyure ukoresheje kode y'umucuruzi.",
     "MOMO_REJECTED": "MoMo ntiyashoboye kohereza ubutumwa kuri iyo nimero.",
     "MOMO_NUMBER_INVALID": "Andika nimero ya MTN MoMo, urugero 078 123 4567.",
-    "MOMO_NOT_FOUND": "MoMo ntiyabonye uko kwishyura."
+    "MOMO_NOT_FOUND": "MoMo ntiyabonye uko kwishyura.",
+    "TENDER_SHORT": "Amafaranga yakiriwe ari munsi y'igiteranyo.",
+    "PHONE_REQUIRED": "Andika nimero ya telefoni y'umukiriya."
   },
   "pwa": {
     "appDesc": "Tumiza vuba. Ifunguka yuzuye nka porogaramu.",

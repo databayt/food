@@ -94,7 +94,6 @@
     "subtotal": "المجموع الفرعي",
     "deliveryFee": "رسوم التوصيل",
     "total": "الإجمالي",
-    "checkout": "المتابعة للدفع",
     "addMore": "أضف أصنافًا أخرى",
     "each": "{price} للواحدة",
     "note": "ملاحظة"
@@ -133,9 +132,13 @@
     "locationError": "تعذّر تحديد موقعك. صف المكان في العنوان بدلًا من ذلك.",
     "viewOnMap": "عرض على الخريطة",
     "removeLocation": "إزالة",
-    "momoPushHint": "سيصلك طلب دفع على هاتفك. أدخل رمز MoMo السري للدفع.",
     "momoNumber": "رقم MoMo",
-    "momoNumberHint": "اتركه فارغًا لاستخدام رقم الهاتف أعلاه. أرقام MTN فقط (078/079)."
+    "momoNumberHint": "اتركه فارغًا لاستخدام رقم الهاتف أعلاه. أرقام MTN فقط (078/079).",
+    "payWithMomo": "ادفع {total} عبر MoMo",
+    "sendingPrompt": "جارٍ إرسال طلب الرمز السري…",
+    "addNote": "أضف ملاحظة للمطبخ",
+    "momoOtherNumber": "ادفع من رقم MoMo آخر",
+    "momoPayHint": "بعد ذلك وافق على الدفع برمز MoMo السري. يُرسل طلبك فور إتمام الدفع."
   },
   "track": {
     "title": "الطلب رقم {number}",
@@ -149,7 +152,9 @@
       "READY_DELIVERY": "جاهز. سيخرج السائق به قريبًا.",
       "COMPLETED": "اكتمل. بالهناء والشفاء!",
       "CANCELLED": "تم إلغاء هذا الطلب.",
-      "ON_THE_WAY": "طلبك في الطريق إليك!"
+      "ON_THE_WAY": "طلبك في الطريق إليك!",
+      "AWAITING_PAYMENT": "بانتظار دفعك عبر MoMo.",
+      "UNPAID": "لم يُدفع الطلب في الوقت المحدد، لذا أُلغي. لم يُخصم أي مبلغ."
     },
     "placedAt": "أُرسل الساعة {time}",
     "items": "الأصناف",
@@ -182,7 +187,12 @@
     "momoNumberPlaceholder": "رقم MoMo (فارغ = رقمك في الطلب)",
     "momoSend": "أرسل طلب الدفع إلى هاتفي",
     "momoResend": "أعد إرسال الطلب",
-    "momoManual": "أو ادفع برمز التاجر بدلًا من ذلك"
+    "momoManual": "أو ادفع برمز التاجر بدلًا من ذلك",
+    "payToPlace": "ادفع لتأكيد طلبك",
+    "momoPlaceHint": "يصل طلبك إلى المطبخ فور إتمام الدفع.",
+    "momoOtherNumber": "ادفع من رقم آخر",
+    "payCashInstead": "سأدفع نقدًا",
+    "paidPlaced": "تم الدفع — أُرسل طلبك!"
   },
   "auth": {
     "title": "دخول الموظفين",
@@ -198,7 +208,8 @@
     "nav": {
       "queue": "الطلبات",
       "kitchen": "المطبخ",
-      "admin": "الإدارة"
+      "admin": "الإدارة",
+      "pos": "طلب جديد"
     },
     "live": "مباشر",
     "reconnecting": "جارٍ إعادة الاتصال…",
@@ -258,7 +269,8 @@
       "collect": "حصّل: {amount} ({method})",
       "paid": "مدفوع — لا تحصّل شيئًا."
     },
-    "momoAuto": "MoMo تلقائي"
+    "momoAuto": "MoMo تلقائي",
+    "walkIn": "زبون حاضر"
   },
   "kitchen": {
     "title": "المطبخ",
@@ -266,6 +278,46 @@
     "preparing": "قيد التحضير",
     "empty": "لا شيء للطبخ الآن.",
     "emptyHint": "تظهر الطلبات المؤكدة هنا تلقائيًا."
+  },
+  "pos": {
+    "title": "طلب جديد",
+    "ticket": "الفاتورة",
+    "clear": "مسح",
+    "empty": "اضغط على صنف لإضافته.",
+    "options": "الخيارات",
+    "added": "أُضيف {name}",
+    "customer": "العميل",
+    "name": "الاسم (اختياري)",
+    "phone": "الهاتف",
+    "phoneOptional": "الهاتف (اختياري)",
+    "address": "عنوان التوصيل",
+    "note": "ملاحظة للمطبخ (اختياري)",
+    "payment": "الدفع",
+    "cash": "نقدًا",
+    "momo": "MoMo",
+    "received": "المبلغ المستلم",
+    "exact": "المبلغ نفسه",
+    "change": "الباقي {amount}",
+    "short": "ينقص {amount}",
+    "charge": "تحصيل {total}",
+    "codCharge": "أرسل للمطبخ · {total} عند التوصيل",
+    "sendPrompt": "أرسل طلب الرمز · {total}",
+    "waiting": "بانتظار الرمز السري على {phone}",
+    "waitingHint": "يذهب الطلب إلى المطبخ فور تأكيد MTN.",
+    "sendAgain": "أعد الإرسال",
+    "switchToCash": "استلم نقدًا بدلًا من ذلك",
+    "cancelPayment": "إلغاء",
+    "paid": "تم الدفع — الطلب #{number} في المطبخ",
+    "placed": "الطلب #{number} في المطبخ",
+    "changeDue": "أعطِ الباقي: {amount}",
+    "collectOnDelivery": "يحصّل السائق {amount}",
+    "newTicket": "فاتورة جديدة",
+    "print": "اطبع الإيصال",
+    "viewTicket": "الفاتورة · {count}",
+    "receiptThanks": "شكرًا لكم!",
+    "receiptPaid": "مدفوع",
+    "receiptUnpaid": "يُدفع عند التوصيل",
+    "changeLabel": "الباقي"
   },
   "admin": {
     "title": "الإدارة",
@@ -400,6 +452,7 @@
   },
   "enums": {
     "orderStatus": {
+      "AWAITING_PAYMENT": "بانتظار الدفع",
       "NEW": "جديد",
       "CONFIRMED": "مؤكد",
       "PREPARING": "قيد التحضير",
@@ -467,7 +520,9 @@
     "MOMO_UNAVAILABLE": "خدمة MoMo لا تستجيب الآن. حاول مجددًا أو ادفع برمز التاجر.",
     "MOMO_REJECTED": "تعذّر على MoMo إرسال الطلب إلى هذا الرقم.",
     "MOMO_NUMBER_INVALID": "أدخل رقم MTN MoMo، مثل 078 123 4567.",
-    "MOMO_NOT_FOUND": "لم يجد MoMo هذه العملية."
+    "MOMO_NOT_FOUND": "لم يجد MoMo هذه العملية.",
+    "TENDER_SHORT": "المبلغ المستلم أقل من الإجمالي.",
+    "PHONE_REQUIRED": "أدخل رقم هاتف العميل."
   },
   "pwa": {
     "appDesc": "اطلب أسرع. يفتح بملء الشاشة كأنه تطبيق.",

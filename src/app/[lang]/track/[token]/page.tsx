@@ -51,6 +51,7 @@ export default async function TrackPage({ params, searchParams }: PageProps<"/[l
         isNew={sp.new === "1"}
         momoCode={restaurant.momoEnabled ? restaurant.momoCode : null}
         momoApi={restaurant.momoEnabled && isMomoApiConfigured()}
+        cashEnabled={restaurant.cashEnabled}
         pickup={{ name: restaurant.name, address: restaurant.address }}
         help={
           <WhatsAppFallback

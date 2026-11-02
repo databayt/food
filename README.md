@@ -14,10 +14,11 @@ Prisma 7 on Neon, UI kit) with the hogwarts mirror pattern
 | Route | Who | What |
 |---|---|---|
 | `/` → `/{lang}/order` | everyone | Menu (QR target) |
-| `/{lang}/order/cart`, `/checkout` | guests | Cart, guest checkout |
+| `/{lang}/order/checkout` | guests | Cart + guest checkout on one page (`/order/cart` redirects) |
 | `/{lang}/track/{token}` | guests | Live order status |
 | `/{lang}/login` | staff | Sign in |
 | `/{lang}/cashier` | cashier, admin | Live queue, payments |
+| `/{lang}/cashier/pos` | cashier, admin | Counter POS: walk-ins and phone orders, cash with change or MoMo push |
 | `/{lang}/kitchen` | kitchen, cashier, admin | Kitchen display |
 | `/{lang}/admin/*` | admin | Menu, extras, categories, settings, orders, staff, QR |
 
@@ -42,7 +43,12 @@ links them to items that have no photo yet. Prices: see `docs/menu-sources.md`.
 ```bash
 pnpm typecheck && pnpm lint && pnpm test && pnpm i18n:check && pnpm build
 pnpm seed:test-staff && pnpm test:e2e   # Playwright (desktop, Pixel 7, iPhone 13, Arabic)
+scripts/momo-sandbox-provision.sh --env .env && pnpm momo:smoke   # MTN sandbox keys, then a real sandbox payment
 ```
+
+With sandbox keys in `.env`, `tests/e2e/momo.spec.ts` and the POS MoMo test run pay-then-place
+against the real MTN sandbox. Playwright reads the database through a CommonJS Prisma client
+(`generator e2e` → `tests/e2e/.prisma`), because it can't load the app's ESM one.
 
 ## Deploy (Cloudflare Workers via OpenNext — no container, the space/co lane)
 
@@ -71,9 +77,10 @@ The production admin is `admin@charlesburgers.rw`; its password is Keychain `cf-
 - **Money** is `Int` whole Rwandan francs (RWF has no minor unit). Formatted `4,000 RWF`.
 - **Orders** snapshot item names (all locales), prices, modifiers and notes; menu edits never change history.
 - **Order creation** is one transaction, prices come only from the database, and an idempotency key makes double-submits return the same order.
-- **Status**: `NEW → CONFIRMED → PREPARING → READY → COMPLETED`, plus `CANCELLED`. Transitions are checked against the role table and the status the staff member saw. Payment status is separate.
+- **Status**: `NEW → CONFIRMED → PREPARING → READY → COMPLETED`, plus `CANCELLED`. Transitions are checked against the role table and the status the staff member saw. Payment status is separate. `AWAITING_PAYMENT` comes before the flow: a MoMo order waiting for the guest's PIN, invisible to staff (`placedAt` is null until it's placed).
 - **Delivery**: the guest types an address and can attach a map pin ("Share my location"). The cashier card opens the pin in Google Maps, messages the customer on WhatsApp, and sends the rider one WhatsApp message with address, pin, items and the amount to collect. "Out for delivery" stamps `dispatchedAt` (the status stays READY) and the guest sees "On the way"; "Delivered" completes it.
-- **MoMo push-to-pay**: with the `MOMO_*` keys set, checkout sends an MTN Request-to-Pay PIN prompt to the guest's phone. MTN's status read-back (callback or poll) marks the order paid and stores the receipt number. Without the keys, the guest pays to the merchant code by hand. See `src/components/order/payment/README.md`.
+- **MoMo pay-then-place**: with the `MOMO_*` keys set, MoMo is the default and "Pay with MoMo" sends an MTN Request-to-Pay PIN prompt from checkout — the PIN is the guest's last step. MTN's status read-back (callback or poll) marks it paid, stores the receipt number and places the order as CONFIRMED, straight to the kitchen. A declined guest can retry, use another number or pay cash instead; an unpaid order is cancelled after 15 min. Without the keys, the guest pays to the merchant code by hand. See `src/components/order/payment/README.md`.
+- **Counter POS**: the cashier rings up a ticket in a few taps. Cash pickup is paid on the spot with change shown and goes straight to the kitchen; a delivery is collected by the rider; MoMo pushes the PIN prompt to the customer's phone and places the order once paid. Prints an 80 mm receipt. See `src/components/cashier/README.md`.
 - **Live updates** are a poll (5 s staff, 10 s guests) — no realtime service. Staff screens keep polling behind other tabs, chime on new orders and repeat the chime every 30 s while an order waits for confirmation.
 - **Privacy**: tracking pages use an unguessable token and never show phone or address; the kitchen query never reads them.
 
@@ -92,8 +99,11 @@ Before taking real orders (all in Admin, no code):
 - **Delivery fee** — 0 today, shown as "confirmed by the restaurant", so the stored
   total excludes it and the rider message asks for the food total only. Set a flat
   fee in Admin → Settings, or turn delivery off until one is agreed.
-- **MoMo** — the tracking page shows the merchant code and amount. A tap-to-dial
-  MoMoPay USSD code was left out until the owner confirms the exact string.
+- **MoMo** — production has no `MOMO_*` keys, so the tracking page shows the merchant code and
+  amount (manual). Push-to-pay (pay-then-place, POS MoMo) needs MTN Rwanda production keys from
+  the restaurant's merchant account (KYB with MTN) stored as Keychain `cf-food-MOMO_*` and added
+  to `scripts/cf-keychain-env.sh`. **Never the sandbox keys** — the sandbox approves any number.
+  A tap-to-dial MoMoPay USSD code was left out until the owner confirms the exact string.
 
 ## References
 

@@ -30,12 +30,14 @@ export function OrderDetail({ lang, dict, order }: { lang: Locale; dict: Diction
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="space-y-2 rounded-2xl border bg-background p-4 text-sm">
           <h2 className="text-base font-semibold sm:text-base lg:text-base">{t.customer}</h2>
-          <p className="font-medium text-foreground">{order.customerName}</p>
-          <p>
-            <a href={`tel:${order.customerPhone}`}>
-              <bdi dir="ltr">{formatLocalPhone(order.customerPhone)}</bdi>
-            </a>
-          </p>
+          <p className="font-medium text-foreground">{order.customerName || dict.cashier.walkIn}</p>
+          {order.customerPhone && (
+            <p>
+              <a href={`tel:${order.customerPhone}`}>
+                <bdi dir="ltr">{formatLocalPhone(order.customerPhone)}</bdi>
+              </a>
+            </p>
+          )}
           <p>{dict.enums.fulfillment[order.fulfillment]}</p>
           {order.deliveryAddress && <p>{order.deliveryAddress}</p>}
           {pin && (

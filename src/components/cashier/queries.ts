@@ -32,16 +32,21 @@ export function toQueueItems(
   }))
 }
 
-/** Active orders (oldest first) plus today's completed/cancelled ones. */
+/**
+ * Active orders (oldest first) plus today's completed/cancelled ones. Only
+ * PLACED orders: a MoMo order waiting for its PIN (or one never paid) is not
+ * the cashier's business.
+ */
 export async function getCashierQueue(locale: Locale): Promise<CashierOrder[]> {
   const orders = await db.order.findMany({
     where: {
+      placedAt: { not: null },
       OR: [
         { status: { in: [...ACTIVE_STATUSES] } },
         { status: { in: [...TERMINAL_STATUSES] }, updatedAt: { gte: startOfTodayKigali() } },
       ],
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: { placedAt: "asc" },
     take: 200,
     select: {
       id: true,
@@ -49,6 +54,7 @@ export async function getCashierQueue(locale: Locale): Promise<CashierOrder[]> {
       status: true,
       fulfillment: true,
       createdAt: true,
+      placedAt: true,
       customerName: true,
       customerPhone: true,
       deliveryAddress: true,
@@ -66,6 +72,7 @@ export async function getCashierQueue(locale: Locale): Promise<CashierOrder[]> {
   return orders.map((o) => ({
     ...o,
     createdAt: o.createdAt.toISOString(),
+    placedAt: (o.placedAt ?? o.createdAt).toISOString(),
     dispatchedAt: o.dispatchedAt?.toISOString() ?? null,
     items: toQueueItems(o.items, locale),
   }))

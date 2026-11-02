@@ -29,8 +29,8 @@ export function riderMessage(
   const pin = orderPin(order);
   const lines: (string | null)[] = [
     interpolate(t.title, { restaurant, number: order.number }),
-    interpolate(t.customer, { name: order.customerName }),
-    interpolate(t.phone, { phone: formatLocalPhone(order.customerPhone) }),
+    order.customerName ? interpolate(t.customer, { name: order.customerName }) : null,
+    order.customerPhone ? interpolate(t.phone, { phone: formatLocalPhone(order.customerPhone) }) : null,
     order.deliveryAddress
       ? interpolate(t.address, { address: order.deliveryAddress })
       : null,

@@ -94,7 +94,6 @@
     "subtotal": "Subtotal",
     "deliveryFee": "Delivery fee",
     "total": "Total",
-    "checkout": "Go to checkout",
     "addMore": "Add more items",
     "each": "{price} each",
     "note": "Note"
@@ -133,9 +132,13 @@
     "locationError": "We couldn't get your location. Describe the place in the address instead.",
     "viewOnMap": "Check on map",
     "removeLocation": "Remove",
-    "momoPushHint": "You'll get a prompt on your phone. Enter your MoMo PIN to pay.",
     "momoNumber": "MoMo number",
-    "momoNumberHint": "Leave empty to use the phone number above. MTN numbers only (078/079)."
+    "momoNumberHint": "Leave empty to use the phone number above. MTN numbers only (078/079).",
+    "payWithMomo": "Pay {total} with MoMo",
+    "sendingPrompt": "Sending the PIN prompt…",
+    "addNote": "Add a note for the kitchen",
+    "momoOtherNumber": "Pay from another MoMo number",
+    "momoPayHint": "Next, approve the payment with your MoMo PIN. Your order is placed as soon as it is paid."
   },
   "track": {
     "title": "Order #{number}",
@@ -149,7 +152,9 @@
       "READY_DELIVERY": "Ready. A rider is about to leave with it.",
       "COMPLETED": "Completed. Enjoy your meal!",
       "CANCELLED": "This order was cancelled.",
-      "ON_THE_WAY": "On its way to you!"
+      "ON_THE_WAY": "On its way to you!",
+      "AWAITING_PAYMENT": "Waiting for your MoMo payment.",
+      "UNPAID": "It wasn't paid in time, so this order was cancelled. Nothing was charged."
     },
     "placedAt": "Placed at {time}",
     "items": "Items",
@@ -182,7 +187,12 @@
     "momoNumberPlaceholder": "MoMo number (empty = your checkout number)",
     "momoSend": "Send payment prompt to my phone",
     "momoResend": "Send the prompt again",
-    "momoManual": "Or pay with the merchant code instead"
+    "momoManual": "Or pay with the merchant code instead",
+    "payToPlace": "Pay to place your order",
+    "momoPlaceHint": "Your order goes to the kitchen as soon as it's paid.",
+    "momoOtherNumber": "Pay from another number",
+    "payCashInstead": "Pay cash instead",
+    "paidPlaced": "Paid — your order is placed!"
   },
   "auth": {
     "title": "Staff sign in",
@@ -198,7 +208,8 @@
     "nav": {
       "queue": "Orders",
       "kitchen": "Kitchen",
-      "admin": "Admin"
+      "admin": "Admin",
+      "pos": "New order"
     },
     "live": "Live",
     "reconnecting": "Reconnecting…",
@@ -258,7 +269,8 @@
       "collect": "Collect: {amount} ({method})",
       "paid": "Paid — collect nothing."
     },
-    "momoAuto": "MoMo auto"
+    "momoAuto": "MoMo auto",
+    "walkIn": "Walk-in"
   },
   "kitchen": {
     "title": "Kitchen",
@@ -266,6 +278,46 @@
     "preparing": "Preparing",
     "empty": "Nothing to cook right now.",
     "emptyHint": "Confirmed orders appear here automatically."
+  },
+  "pos": {
+    "title": "New order",
+    "ticket": "Ticket",
+    "clear": "Clear",
+    "empty": "Tap an item to add it.",
+    "options": "Options",
+    "added": "Added {name}",
+    "customer": "Customer",
+    "name": "Name (optional)",
+    "phone": "Phone",
+    "phoneOptional": "Phone (optional)",
+    "address": "Delivery address",
+    "note": "Note for the kitchen (optional)",
+    "payment": "Payment",
+    "cash": "Cash",
+    "momo": "MoMo",
+    "received": "Received",
+    "exact": "Exact",
+    "change": "Change {amount}",
+    "short": "{amount} short",
+    "charge": "Charge {total}",
+    "codCharge": "Send to kitchen · {total} on delivery",
+    "sendPrompt": "Send PIN prompt · {total}",
+    "waiting": "Waiting for the PIN on {phone}",
+    "waitingHint": "The order goes to the kitchen as soon as MTN confirms.",
+    "sendAgain": "Send again",
+    "switchToCash": "Take cash instead",
+    "cancelPayment": "Cancel",
+    "paid": "Paid — order #{number} is in the kitchen",
+    "placed": "Order #{number} is in the kitchen",
+    "changeDue": "Give change: {amount}",
+    "collectOnDelivery": "Rider collects {amount}",
+    "newTicket": "New ticket",
+    "print": "Print receipt",
+    "viewTicket": "Ticket · {count}",
+    "receiptThanks": "Thank you!",
+    "receiptPaid": "Paid",
+    "receiptUnpaid": "To pay on delivery",
+    "changeLabel": "Change"
   },
   "admin": {
     "title": "Admin",
@@ -400,6 +452,7 @@
   },
   "enums": {
     "orderStatus": {
+      "AWAITING_PAYMENT": "Awaiting payment",
       "NEW": "New",
       "CONFIRMED": "Confirmed",
       "PREPARING": "Preparing",
@@ -467,7 +520,9 @@
     "MOMO_UNAVAILABLE": "MoMo isn't responding right now. Try again, or pay with the merchant code.",
     "MOMO_REJECTED": "MoMo couldn't send the prompt to that number.",
     "MOMO_NUMBER_INVALID": "Enter an MTN MoMo number, e.g. 078 123 4567.",
-    "MOMO_NOT_FOUND": "MoMo couldn't find that payment."
+    "MOMO_NOT_FOUND": "MoMo couldn't find that payment.",
+    "TENDER_SHORT": "The cash received is less than the total.",
+    "PHONE_REQUIRED": "Enter the customer’s phone number."
   },
   "pwa": {
     "appDesc": "Order faster. Opens full screen, like an app.",

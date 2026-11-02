@@ -108,8 +108,11 @@ test("@desktop an unavailable item is rejected at checkout", async ({ page }) =>
   await db.menuItem.update({ where: { slug: "soft-drink" }, data: { isAvailable: false } })
   try {
     await page.getByTestId("place-order").click()
-    await expect(page.getByText(/just sold out/)).toBeVisible()
-    await expect(page).toHaveURL(/\/en\/order\/cart$/)
+    await expect(page.getByText(/just sold out/).first()).toBeVisible()
+    // The cart lives on checkout: the fresh menu marks the line right here.
+    await expect(page).toHaveURL(/\/en\/order\/checkout$/)
+    await expect(page.getByTestId("cart-line").first()).toContainText("Sold out")
+    await expect(page.getByTestId("place-order")).toBeDisabled()
     expect(await ordersFor(name)).toHaveLength(0)
   } finally {
     await db.menuItem.update({ where: { slug: "soft-drink" }, data: { isAvailable: true } })

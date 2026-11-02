@@ -13,7 +13,7 @@ import { db } from "@/lib/db"
 export async function getKitchenQueue(locale: Locale): Promise<KitchenOrder[]> {
   const orders = await db.order.findMany({
     where: { status: { in: ["CONFIRMED", "PREPARING"] } },
-    orderBy: { createdAt: "asc" },
+    orderBy: { placedAt: "asc" },
     take: 100,
     select: {
       id: true,
@@ -21,6 +21,7 @@ export async function getKitchenQueue(locale: Locale): Promise<KitchenOrder[]> {
       status: true,
       fulfillment: true,
       createdAt: true,
+      placedAt: true,
       note: true,
       items: {
         orderBy: { sortOrder: "asc" },
@@ -28,5 +29,10 @@ export async function getKitchenQueue(locale: Locale): Promise<KitchenOrder[]> {
       },
     },
   })
-  return orders.map((o) => ({ ...o, createdAt: o.createdAt.toISOString(), items: toQueueItems(o.items, locale) }))
+  return orders.map((o) => ({
+    ...o,
+    createdAt: o.createdAt.toISOString(),
+    placedAt: (o.placedAt ?? o.createdAt).toISOString(),
+    items: toQueueItems(o.items, locale),
+  }))
 }

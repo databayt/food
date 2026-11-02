@@ -1,30 +1,25 @@
 "use server"
 
-import { Prisma } from "@/generated/prisma/client"
-
 import { fail, ok, type ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getMomoConfig, toMomoPayer } from "@/lib/momo/config"
+import { findOrderByKey, insertOrder, type OrderRef } from "@/lib/order/create"
 import { computeOrderTotals } from "@/lib/order/pricing"
-import { generateTrackingToken } from "@/lib/order/token"
 import { assertRateLimit, getClientId, RateLimitError } from "@/lib/rate-limit"
 
+import { sendMomoPrompt } from "../payment/prompt"
 import { resolveOrderLines } from "./resolve-order"
 import { CreateOrderSchema, fieldErrors } from "./validation"
 
-export type CreatedOrder = { number: number; token: string }
+/** `awaitingPayment`: a MoMo PIN prompt is on the guest's phone; the order is placed once MTN confirms. */
+export type CreatedOrder = { number: number; token: string; awaitingPayment?: true }
 
-async function findByKey(idempotencyKey: string): Promise<CreatedOrder | null> {
-  const existing = await db.order.findUnique({
-    where: { idempotencyKey },
-    select: { number: true, publicToken: true },
-  })
-  return existing ? { number: existing.number, token: existing.publicToken } : null
-}
-
-function isUniqueViolation(error: unknown, field: string): boolean {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false
-  const target = (error.meta as { target?: unknown } | undefined)?.target
-  return Array.isArray(target) ? target.includes(field) : String(target ?? "").includes(field)
+function toCreated(order: Pick<OrderRef, "number" | "publicToken" | "status">): CreatedOrder {
+  return {
+    number: order.number,
+    token: order.publicToken,
+    ...(order.status === "AWAITING_PAYMENT" ? { awaitingPayment: true as const } : {}),
+  }
 }
 
 /**
@@ -32,9 +27,13 @@ function isUniqueViolation(error: unknown, field: string): boolean {
  *
  *  1. validate (Zod; prices ignored)  5. settings + current menu rows
  *  2. idempotency fast path            6. compute totals server-side (integers)
- *  3. rate limit per IP (loose)        7. ONE transaction: customer, order, item
- *  4. rate limit per phone (tight)        snapshots, modifiers, payment, history
- *                                      8. duplicate key → return the same order
+ *  3. rate limit per IP (loose)        7. ONE transaction (lib/order/create.ts)
+ *  4. rate limit per phone (tight)     8. MoMo: send the PIN prompt
+ *
+ * Pay-then-place: with MTN Request-to-Pay configured, a MoMo order is
+ * written as AWAITING_PAYMENT and the prompt goes out in this same request,
+ * so the guest's last step is the PIN. No staff screen shows the order until
+ * MTN confirms the money (payment/settle.ts places it, straight to the kitchen).
  */
 export async function createOrder(input: unknown): Promise<ActionResponse<CreatedOrder>> {
   const parsed = CreateOrderSchema.safeParse(input)
@@ -45,8 +44,8 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
   const data = parsed.data
 
   // A retry of an order that already exists is free — it never burns budget.
-  const already = await findByKey(data.idempotencyKey)
-  if (already) return ok(already)
+  const already = await findOrderByKey(data.idempotencyKey)
+  if (already) return ok(toCreated(already))
 
   try {
     await assertRateLimit("order", await getClientId())
@@ -65,6 +64,12 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
     return fail("PAYMENT_METHOD_DISABLED")
   }
 
+  // Push-to-pay: check the payer number BEFORE anything is written.
+  const momo = data.paymentMethod === "MOMO" ? getMomoConfig() : null
+  const payer = momo ? toMomoPayer(data.momoPhone || data.phone, momo.targetEnv === "sandbox") : null
+  // The contact phone may be Airtel: the form then opens "pay from another number".
+  if (momo && !payer) return fail("MOMO_NUMBER_INVALID", { errors: { momoPhone: "MOMO_NUMBER_INVALID" } })
+
   const isDelivery = data.fulfillment === "DELIVERY"
   const resolved = await resolveOrderLines(db, data.lines)
   if (!resolved.ok) return fail(resolved.error, { details: { itemIds: resolved.itemIds } })
@@ -74,65 +79,36 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
     isDelivery ? settings.deliveryFee : 0
   )
 
+  let order: Awaited<ReturnType<typeof insertOrder>>
   try {
-    const order = await db.$transaction(async (tx) => {
-      const customer = await tx.customer.upsert({
-        where: { phone: data.phone },
-        update: { name: data.name, lastOrderAt: new Date() },
-        create: { phone: data.phone, name: data.name },
-      })
-      return tx.order.create({
-        data: {
-          publicToken: generateTrackingToken(),
-          idempotencyKey: data.idempotencyKey,
-          status: "NEW",
-          fulfillment: data.fulfillment,
-          locale: data.locale,
-          customerId: customer.id,
-          customerName: data.name,
-          customerPhone: data.phone,
-          deliveryAddress: isDelivery ? data.address : null,
-          deliveryLat: isDelivery ? (data.location?.lat ?? null) : null,
-          deliveryLng: isDelivery ? (data.location?.lng ?? null) : null,
-          deliveryAccuracy: isDelivery ? (data.location?.accuracy ?? null) : null,
-          note: data.note || null,
-          subtotal: totals.subtotal,
-          deliveryFee: totals.deliveryFee,
-          total: totals.total,
-          items: {
-            create: resolved.lines.map((line, index) => ({
-              menuItemId: line.menuItemId,
-              names: line.names,
-              unitPrice: line.unitPrice,
-              quantity: line.quantity,
-              modifiersTotal: line.modifiersTotal,
-              lineTotal: line.lineTotal,
-              note: line.note || null,
-              sortOrder: index,
-              modifiers: {
-                create: line.modifiers.map((m) => ({
-                  modifierOptionId: m.modifierOptionId,
-                  groupNames: m.groupNames,
-                  optionNames: m.optionNames,
-                  price: m.price,
-                })),
-              },
-            })),
-          },
-          payment: { create: { method: data.paymentMethod, status: "PENDING", amount: totals.total } },
-          history: { create: { from: null, to: "NEW", event: "STATUS" } },
-        },
-        select: { number: true, publicToken: true },
-      })
+    order = await insertOrder({
+      idempotencyKey: data.idempotencyKey,
+      locale: data.locale,
+      stage: momo ? "AWAITING_PAYMENT" : "NEW",
+      fulfillment: data.fulfillment,
+      customer: { name: data.name, phone: data.phone },
+      delivery: isDelivery
+        ? { address: data.address, lat: data.location?.lat ?? null, lng: data.location?.lng ?? null, accuracy: data.location?.accuracy ?? null }
+        : null,
+      note: data.note || null,
+      lines: resolved.lines,
+      totals,
+      payment: { method: data.paymentMethod },
     })
-    return ok({ number: order.number, token: order.publicToken })
   } catch (error) {
-    // Two taps raced past the fast path: the loser returns the winner's order.
-    if (isUniqueViolation(error, "idempotencyKey")) {
-      const winner = await findByKey(data.idempotencyKey)
-      if (winner) return ok(winner)
-    }
     console.error("[createOrder] failed", error)
     return fail("GENERIC")
   }
+
+  // A failed send is not fatal: the order waits, and the tracking page shows
+  // why and offers "send again" or "pay cash instead".
+  if (momo && payer && order.created && order.payment) {
+    try {
+      await sendMomoPrompt(momo, { paymentId: order.payment.id, orderNumber: order.number, amount: totals.total, payer })
+    } catch (error) {
+      // The order exists either way; "send again" is one tap on the next page.
+      console.error("[createOrder] prompt failed", error)
+    }
+  }
+  return ok(toCreated(order))
 }

@@ -15,8 +15,12 @@ export type CashierOrder = {
   status: OrderStatus
   fulfillment: FulfillmentType
   createdAt: string
+  /** When it reached the staff screens — the clock the queue runs on. */
+  placedAt: string
+  /** Empty for a counter walk-in. */
   customerName: string
-  customerPhone: string
+  /** Null for a counter walk-in who gave no phone. */
+  customerPhone: string | null
   deliveryAddress: string | null
   deliveryLat: number | null
   deliveryLng: number | null
@@ -38,6 +42,7 @@ export type KitchenOrder = {
   status: OrderStatus
   fulfillment: FulfillmentType
   createdAt: string
+  placedAt: string
   note: string | null
   items: QueueItem[]
 }

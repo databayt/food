@@ -1,21 +1,26 @@
 import "server-only"
 
 import type { Locale } from "@/components/internationalization/config"
-import { refreshPendingAttempts } from "@/components/order/payment/settle"
+import { expireUnpaidOrders, refreshPendingAttempts } from "@/components/order/payment/settle"
 import { db } from "@/lib/db"
 import { snapshotName } from "@/lib/order/localize"
 import { TRACKING_TOKEN_PATTERN } from "@/lib/order/token"
 
 import type { TrackedOrder } from "./types"
 
-/** Re-read an in-flight MoMo prompt from MTN, so a missed callback still settles. */
+/**
+ * Re-read an in-flight MoMo prompt from MTN, so a missed callback still
+ * settles (and a paid order is placed); then give up on one nobody paid.
+ */
 async function settlePendingMomo(token: string) {
   try {
-    const pending = await db.payment.findFirst({
-      where: { order: { publicToken: token }, status: "PENDING", attempts: { some: { status: "PENDING" } } },
-      select: { id: true },
+    const order = await db.order.findUnique({
+      where: { publicToken: token },
+      select: { id: true, status: true, payment: { select: { id: true, status: true, method: true } } },
     })
-    if (pending) await refreshPendingAttempts(pending.id)
+    if (!order?.payment || order.payment.status !== "PENDING" || order.payment.method !== "MOMO") return
+    await refreshPendingAttempts(order.payment.id)
+    if (order.status === "AWAITING_PAYMENT") await expireUnpaidOrders(order.id)
   } catch (error) {
     console.error("[track] momo refresh failed", error)
   }
@@ -38,6 +43,7 @@ export async function getTrackedOrder(token: string, locale: Locale): Promise<Tr
       createdAt: true,
       updatedAt: true,
       dispatchedAt: true,
+      placedAt: true,
       subtotal: true,
       deliveryFee: true,
       total: true,
@@ -71,6 +77,7 @@ export async function getTrackedOrder(token: string, locale: Locale): Promise<Tr
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
     dispatchedAt: order.dispatchedAt?.toISOString() ?? null,
+    placed: order.placedAt !== null,
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,
     total: order.total,

@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, Bike, Loader2, LocateFixed, MapPin, Store, Bankn
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
+import { BagGlyph } from "@/components/atom/icons"
 import { Price, Priced } from "@/components/atom/price"
 import type { Locale } from "@/components/internationalization/config"
 import { interpolate } from "@/components/internationalization/interpolate"
@@ -27,7 +28,6 @@ import { getRememberedCustomer, rememberCustomer, rememberOrder } from "../cart/
 import { useCart, useCartHydrated } from "../cart/use-cart"
 import { cartSignature, cartSubtotal, indexMenu, resolveCart } from "../cart/util"
 import type { MenuView } from "../menu/types"
-import { startMomoPayment } from "../payment/actions"
 import { createOrder } from "./actions"
 import { clearCheckoutKey, getCheckoutKey } from "./idempotency"
 import { CheckoutFormSchema, type CheckoutFormValues } from "./validation"
@@ -53,12 +53,15 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
   const [pending, startTransition] = useTransition()
   const [placed, setPlaced] = useState(false)
   const [location, setLocation] = useState<DeliveryPin | null>(null)
-  const [momoPhone, setMomoPhone] = useState("")
+  const [showMomoNumber, setShowMomoNumber] = useState(false)
+  const [showNote, setShowNote] = useState(false)
   const Back = isRTL ? ArrowRight : ArrowLeft
   const errorText = (code?: string) => (code ? ((dict?.errors as Record<string, string> | undefined)?.[code] ?? code) : undefined)
 
   const fulfillments = (["PICKUP", "DELIVERY"] as const).filter((f) => (f === "PICKUP" ? settings.pickupEnabled : settings.deliveryEnabled))
   const methods = (["CASH", "MOMO"] as const).filter((m) => (m === "CASH" ? settings.cashEnabled : settings.momoEnabled))
+  // Push-to-pay is the fastest way to a paid order, so it leads when it's live.
+  const defaultMethod = settings.momoApi && methods.includes("MOMO") ? "MOMO" : (methods[0] ?? "CASH")
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(CheckoutFormSchema),
@@ -67,7 +70,8 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
       phone: "",
       fulfillment: fulfillments[0] ?? "PICKUP",
       address: "",
-      paymentMethod: methods[0] ?? "CASH",
+      paymentMethod: defaultMethod,
+      momoPhone: "",
       note: "",
     },
   })
@@ -88,19 +92,17 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
   const paymentMethod = useWatch({ control: form.control, name: "paymentMethod" })
   const deliveryFee = fulfillment === "DELIVERY" ? settings.deliveryFee : 0
   const total = subtotal + deliveryFee
-
-  // After a successful order the cart empties; don't flash the empty state.
-  useEffect(() => {
-    if (hydrated && lines.length === 0 && !placed) router.replace(`/${lang}/order/cart`)
-  }, [hydrated, lines.length, placed, lang, router])
+  // Pay-then-place: the button sends the PIN prompt; the order is placed once paid.
+  const pushToPay = paymentMethod === "MOMO" && settings.momoApi
+  const hasBlocking = resolved.some((r) => r.unavailable)
 
   const onSubmit = (values: CheckoutFormValues) => {
-    if (resolved.some((r) => r.unavailable)) {
+    if (hasBlocking) {
       toast.error(errorText("ITEM_UNAVAILABLE"))
-      router.push(`/${lang}/order/cart`)
       return
     }
-    const idempotencyKey = getCheckoutKey(cartSignature(lines))
+    // A different payment or fulfillment is a different order, not a retry.
+    const idempotencyKey = getCheckoutKey(`${cartSignature(lines)}|${values.paymentMethod}|${values.fulfillment}`)
     startTransition(async () => {
       let res: Awaited<ReturnType<typeof createOrder>>
       try {
@@ -108,6 +110,7 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
           idempotencyKey,
           locale: lang,
           ...values,
+          momoPhone: pushToPay ? values.momoPhone.trim() : "",
           location: values.fulfillment === "DELIVERY" ? location : null,
           lines: lines.map(({ itemId, optionIds, quantity, note }) => ({ itemId, optionIds, quantity, note })),
         })
@@ -121,12 +124,11 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
           for (const [field, code] of Object.entries(res.errors)) {
             if (field in values) form.setError(field as keyof CheckoutFormValues, { message: code })
           }
+          if (res.errors.momoPhone) setShowMomoNumber(true)
         }
         toast.error(errorText(res.error) ?? errorText("GENERIC"))
-        if (res.error === "ITEM_UNAVAILABLE" || res.error === "INVALID_MODIFIER") {
-          router.refresh()
-          router.push(`/${lang}/order/cart`)
-        }
+        // Fresh menu rows mark the sold-out lines right here in the list.
+        if (res.error === "ITEM_UNAVAILABLE" || res.error === "INVALID_MODIFIER") router.refresh()
         return
       }
       setPlaced(true)
@@ -145,15 +147,8 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
       })
       clearCheckoutKey()
       clearCart()
-      // Fire the PIN prompt now, while the phone is in hand. A failure is not
-      // fatal: the tracking page shows why and offers "send again".
-      if (values.paymentMethod === "MOMO" && settings.momoApi) {
-        try {
-          await startMomoPayment({ token: res.data.token, phone: momoPhone.trim() || undefined })
-        } catch {
-          // offline or crashed — the tracking page retries
-        }
-      }
+      // MoMo: the PIN prompt is already on the phone; the tracking page waits
+      // for MTN and turns into the live order the moment it's paid.
       router.replace(`/${lang}/track/${res.data.token}?new=1`)
     })
   }
@@ -163,9 +158,9 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
   return (
     <main id="main-content" className="mx-auto max-w-lg px-4 pb-40 pt-4">
       <Button asChild variant="ghost" size="sm" className="-ms-2 mb-2 px-2">
-        <Link href={`/${lang}/order/cart`}>
+        <Link href={`/${lang}/order`}>
           <Back />
-          {dict?.cart?.title ?? "Your order"}
+          {dict?.common?.backToMenu ?? "Back to menu"}
         </Link>
       </Button>
       <h1 className="text-2xl font-extrabold sm:text-3xl lg:text-3xl">{dict?.checkout?.title ?? "Checkout"}</h1>
@@ -176,9 +171,31 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
           <Skeleton className="h-10 w-full rounded-xl" />
           <Skeleton className="h-24 w-full rounded-xl" />
         </div>
+      ) : lines.length === 0 ? (
+        <div className="mt-16 flex flex-col items-center text-center" data-testid="cart-empty">
+          <div className="mb-6 grid size-16 place-items-center rounded-full bg-muted text-muted-foreground">
+            <BagGlyph size={32} />
+          </div>
+          <h2 className="mb-2 text-xl font-semibold sm:text-xl lg:text-xl">{dict?.cart?.empty ?? "Your order is empty"}</h2>
+          <p className="mb-6">{dict?.cart?.emptyHint ?? "Add something tasty from the menu."}</p>
+          <Button asChild variant="black" className="h-11 rounded-full px-6">
+            <Link href={`/${lang}/order`}>{dict?.cart?.browseMenu ?? "Browse the menu"}</Link>
+          </Button>
+        </div>
       ) : (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-8" noValidate>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-8" noValidate>
+            <section aria-labelledby="your-order">
+              <h2 id="your-order" className="sr-only">
+                {dict?.cart?.title ?? "Your order"}
+              </h2>
+              <CartLines resolved={resolved} />
+              {hasBlocking && <p className="mt-1 text-sm text-destructive">{dict?.errors?.ITEM_UNAVAILABLE}</p>}
+              <Button asChild variant="outline" className="mt-2 w-full rounded-full">
+                <Link href={`/${lang}/order`}>{dict?.cart?.addMore ?? "Add more items"}</Link>
+              </Button>
+            </section>
+
             <section className="space-y-4">
               <h2 className="text-lg font-semibold sm:text-lg lg:text-lg">{dict?.checkout?.yourDetails ?? "Your details"}</h2>
               <FormField
@@ -274,58 +291,80 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
                       m === "CASH"
                         ? dict?.checkout?.cashHint
                         : settings.momoApi
-                          ? dict?.checkout?.momoPushHint
+                          ? dict?.checkout?.momoPayHint
                           : settings.momoCode
                           ? interpolate(dict?.checkout?.momoHint, { code: settings.momoCode })
                           : undefined,
                     icon: m === "CASH" ? <Banknote className="size-5" /> : <Smartphone className="size-5" />,
                   }))}
                 />
-                {paymentMethod === "MOMO" && settings.momoApi && (
-                  <div className="space-y-1.5">
-                    <label htmlFor="momo-phone" className="text-sm font-medium">
-                      {dict?.checkout?.momoNumber ?? "MoMo number"}{" "}
-                      <span className="font-normal text-muted-foreground">({dict?.common?.optional ?? "Optional"})</span>
-                    </label>
-                    <Input
-                      id="momo-phone"
-                      value={momoPhone}
-                      onChange={(e) => setMomoPhone(e.target.value)}
-                      type="tel"
-                      inputMode="tel"
-                      dir="ltr"
-                      maxLength={20}
-                      className="h-12 text-base"
-                      placeholder={dict?.checkout?.phonePlaceholder ?? "078 123 4567"}
-                      data-testid="momo-phone"
+                {pushToPay &&
+                  (showMomoNumber ? (
+                    <FormField
+                      control={form.control}
+                      name="momoPhone"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>{dict?.checkout?.momoNumber ?? "MoMo number"}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="tel"
+                              inputMode="tel"
+                              dir="ltr"
+                              maxLength={20}
+                              className="h-12 text-base"
+                              placeholder={dict?.checkout?.phonePlaceholder ?? "078 123 4567"}
+                              data-testid="momo-phone"
+                            />
+                          </FormControl>
+                          {fieldState.error ? (
+                            <FormMessage>{errorText(fieldState.error.message)}</FormMessage>
+                          ) : (
+                            <p className="text-xs">{dict?.checkout?.momoNumberHint}</p>
+                          )}
+                        </FormItem>
+                      )}
                     />
-                    <p className="text-xs">{dict?.checkout?.momoNumberHint}</p>
-                  </div>
-                )}
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-sm font-medium underline underline-offset-2"
+                      onClick={() => setShowMomoNumber(true)}
+                      data-testid="momo-other-number"
+                    >
+                      {dict?.checkout?.momoOtherNumber ?? "Pay from another MoMo number"}
+                    </button>
+                  ))}
               </section>
             )}
 
-            <FormField
-              control={form.control}
-              name="note"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>
-                    {dict?.checkout?.orderNote ?? "Note for the kitchen"}{" "}
-                    <span className="font-normal text-muted-foreground">({dict?.common?.optional ?? "Optional"})</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={2} maxLength={280} className="text-base" placeholder={dict?.checkout?.orderNotePlaceholder} />
-                  </FormControl>
-                  <FormMessage>{errorText(fieldState.error?.message)}</FormMessage>
-                </FormItem>
-              )}
-            />
+            {showNote || form.getValues("note") ? (
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {dict?.checkout?.orderNote ?? "Note for the kitchen"}{" "}
+                      <span className="font-normal text-muted-foreground">({dict?.common?.optional ?? "Optional"})</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={2} maxLength={280} autoFocus={showNote} className="text-base" placeholder={dict?.checkout?.orderNotePlaceholder} />
+                    </FormControl>
+                    <FormMessage>{errorText(fieldState.error?.message)}</FormMessage>
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <button type="button" className="text-sm font-medium underline underline-offset-2" onClick={() => setShowNote(true)} data-testid="add-note">
+                {dict?.checkout?.addNote ?? "Add a note for the kitchen"}
+              </button>
+            )}
 
             <section className="rounded-2xl border p-4">
-              <h2 className="text-lg font-semibold sm:text-lg lg:text-lg">{dict?.checkout?.summary ?? "Order summary"}</h2>
-              <CartLines resolved={resolved} editable={false} />
-              <dl className="space-y-2 border-t pt-3 text-sm">
+              <h2 className="sr-only">{dict?.checkout?.summary ?? "Order summary"}</h2>
+              <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt>{dict?.cart?.subtotal ?? "Subtotal"}</dt>
                   <dd>
@@ -359,14 +398,20 @@ export function CheckoutForm({ lang, menu, settings }: { lang: Locale; menu: Men
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={pending}
+                  disabled={pending || hasBlocking}
                   className="mx-auto flex h-12 w-full max-w-lg rounded-full text-base"
                   data-testid="place-order"
+                  data-push-to-pay={pushToPay || undefined}
                 >
                   {pending ? (
                     <>
                       <Loader2 className="animate-spin" />
-                      {dict?.checkout?.placing ?? "Placing your order…"}
+                      {pushToPay ? (dict?.checkout?.sendingPrompt ?? "Sending the PIN prompt…") : (dict?.checkout?.placing ?? "Placing your order…")}
+                    </>
+                  ) : pushToPay ? (
+                    <>
+                      <Smartphone />
+                      <Priced template={(dict?.checkout?.payWithMomo ?? "Pay {total} with MoMo").replace("{total}", "{price}")} amount={total} />
                     </>
                   ) : (
                     <Priced template={(dict?.checkout?.placeOrder ?? "Place order · {total}").replace("{total}", "{price}")} amount={total} />

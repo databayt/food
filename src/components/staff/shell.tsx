@@ -6,7 +6,7 @@ import { LogOut } from "lucide-react"
 import type { UserRole } from "@/generated/prisma/client"
 
 import { BrandMark } from "@/components/atom/brand-mark"
-import { ChefGlyph, ReceiptGlyph, SettingsGlyph } from "@/components/atom/icons"
+import { BurgerGlyph, ChefGlyph, ReceiptGlyph, SettingsGlyph } from "@/components/atom/icons"
 import { logout } from "@/components/auth/login/actions"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -15,10 +15,11 @@ import { Button } from "@/components/ui/button"
 import { BRAND_NAME } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
-import { navFor, type StaffNavKey } from "./nav"
+import { activeNavHref, navFor, type StaffNavKey } from "./nav"
 
 const ICONS: Record<StaffNavKey, (p: { size?: number }) => React.ReactElement> = {
   queue: ReceiptGlyph,
+  pos: BurgerGlyph,
   kitchen: ChefGlyph,
   admin: SettingsGlyph,
 }
@@ -43,7 +44,8 @@ export function StaffShell({
   const dict = useDictionary()
   const pathname = usePathname() ?? ""
   const items = navFor(role)
-  const isActive = (href: string) => pathname.startsWith(`/${lang}${href}`)
+  const activeHref = activeNavHref(pathname, `/${lang}`, items.map((i) => i.href))
+  const isActive = (href: string) => href === activeHref
 
   return (
     <div className="min-h-dvh bg-muted/40">

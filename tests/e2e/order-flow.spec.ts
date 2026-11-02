@@ -1,26 +1,31 @@
 import { expect, test } from "@playwright/test"
 
-import { ordersFor, placeOrder, staffPage, testCustomer } from "./helpers"
+import { momoSandbox, ordersFor, placeOrder, staffPage, testCustomer } from "./helpers"
 
 /**
- * The golden path: customer menu → cart → checkout → confirmation →
- * cashier confirms → kitchen prepares → ready → cashier completes, with the
- * guest's tracking page following along.
+ * The golden path: customer menu → checkout → confirmation → cashier
+ * confirms → kitchen prepares → ready → cashier records the payment and
+ * completes, with the guest's tracking page following along. Without MTN
+ * keys MoMo is the manual merchant code; with them (momo.spec.ts covers
+ * push-to-pay) this path pays cash.
  */
 test("@desktop customer order flows through cashier and kitchen to completed", async ({ page, browser }) => {
   const name = testCustomer("Flow")
-  const { number, token, phone } = await placeOrder(page, name, { payment: "MOMO" })
+  const payment = momoSandbox ? "CASH" : "MOMO"
+  const { number, token, phone } = await placeOrder(page, name, { payment })
   expect(number).toBeGreaterThan(1000)
   await expect(page.getByTestId("order-status")).toHaveAttribute("data-status", "NEW")
   // The guest is told how to pay, and where to collect.
-  await expect(page.getByTestId("momo-pay")).toContainText("3,500 RWF")
-  await expect(page.getByTestId("momo-code")).not.toBeEmpty()
+  if (payment === "MOMO") {
+    await expect(page.getByTestId("momo-pay")).toContainText("3,500 RWF")
+    await expect(page.getByTestId("momo-code")).not.toBeEmpty()
+  }
   await expect(page.getByTestId("pickup-place")).toBeVisible()
 
   // Stored server-side with DB prices: (3000 + 500 cheese) × 1.
   const [order] = await ordersFor(name)
   expect(order?.total).toBe(3500)
-  expect(order?.payment).toMatchObject({ method: "MOMO", status: "PENDING", amount: 3500 })
+  expect(order?.payment).toMatchObject({ method: payment, status: "PENDING", amount: 3500 })
 
   // Cashier: the new order appears without a manual refresh.
   const cashier = await staffPage(browser, "cashier")
@@ -54,10 +59,10 @@ test("@desktop customer order flows through cashier and kitchen to completed", a
   await cashier.reload()
   await expect(card).toHaveAttribute("data-status", "READY")
   await card.getByTestId("mark-paid").click()
-  await cashier.getByPlaceholder(/MoMo transaction ID/).fill("MP240926.1234")
+  if (payment === "MOMO") await cashier.getByPlaceholder(/MoMo transaction ID/).fill("MP240926.1234")
   await cashier.getByTestId("confirm-paid").click()
   await expect(card).toContainText("Paid")
-  await expect(page.getByTestId("momo-pay")).toBeHidden({ timeout: 25_000 })
+  if (payment === "MOMO") await expect(page.getByTestId("momo-pay")).toBeHidden({ timeout: 25_000 })
   await expect(card.getByTestId("dispatch-order")).toHaveCount(0) // pickup never goes out with a rider
   await expect(card.getByTestId("next-action")).toHaveText("Picked up")
   await card.getByTestId("next-action").click()
@@ -68,7 +73,7 @@ test("@desktop customer order flows through cashier and kitchen to completed", a
   const [done] = await ordersFor(name)
   expect(done?.status).toBe("COMPLETED")
   expect(done?.payment?.status).toBe("PAID")
-  expect(done?.payment?.reference).toBe("MP240926.1234")
+  expect(done?.payment?.reference).toBe(payment === "MOMO" ? "MP240926.1234" : null)
   expect(done?.history.map((h) => h.to ?? h.event)).toEqual(["NEW", "CONFIRMED", "PREPARING", "READY", "PAYMENT_PAID", "COMPLETED"])
   expect(token).toHaveLength(22)
 })

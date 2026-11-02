@@ -8,7 +8,7 @@ import { snapshotName } from "@/lib/order/localize"
 import { normalizeRwandaPhone } from "@/lib/order/phone"
 
 export const PAGE_SIZE = 25
-const STATUSES: OrderStatus[] = ["NEW", "CONFIRMED", "PREPARING", "READY", "COMPLETED", "CANCELLED"]
+const STATUSES: OrderStatus[] = ["AWAITING_PAYMENT", "NEW", "CONFIRMED", "PREPARING", "READY", "COMPLETED", "CANCELLED"]
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
 export type OrderFilters = { q: string; status: OrderStatus | ""; from: string; to: string; page: number }

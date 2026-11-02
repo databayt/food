@@ -79,7 +79,7 @@ export function OrdersContent({
                     </Link>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{fmt.format(o.createdAt)}</TableCell>
-                  <TableCell>{o.customerName}</TableCell>
+                  <TableCell>{o.customerName || dict.cashier.walkIn}</TableCell>
                   <TableCell>{dict.enums.orderStatus[o.status]}</TableCell>
                   <TableCell className="whitespace-nowrap">
                     {o.payment ? `${dict.enums.paymentMethod[o.payment.method]} · ${dict.enums.paymentStatus[o.payment.status]}` : "—"}
