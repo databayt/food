@@ -62,7 +62,17 @@ describe("momo client", () => {
       currency: "EUR",
       externalId: "1042",
       payer: { partyIdType: "MSISDN", partyId: "250781234567" },
+      // "#" trips MTN's WAF (an HTML "Request Rejected", no prompt) — stripped.
+      payerMessage: "Charles Burgers 1042",
+      payeeNote: "Charles Burgers 1042",
     })
+  })
+
+  it("treats MTN's WAF page (HTTP 200, not 202) as a rejected request", async () => {
+    mockFetch((url) => (url.endsWith("/collection/token/") ? tokenResponse() : new Response("<html>Request Rejected</html>", { status: 200 })))
+    await expect(
+      requestToPay(config, { referenceId: "r", amount: 1, payer: "+250781234567", externalId: "1", message: "x" })
+    ).rejects.toMatchObject({ code: "MOMO_REJECTED" })
   })
 
   it("caches the token across calls", async () => {

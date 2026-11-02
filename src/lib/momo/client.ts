@@ -78,6 +78,15 @@ export function callbackFor(base: string, referenceId: string): string {
   return url.toString()
 }
 
+/**
+ * Text shown on the payer's phone and statement. MTN's gateway WAF rejects
+ * some punctuation outright — a "#" gets an HTML "Request Rejected" page
+ * (HTTP 200, no prompt) — so only letters, digits, spaces, "." and "-" pass.
+ */
+export function payerText(message: string): string {
+  return message.replace(/[^\p{L}\p{N} .-]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 160)
+}
+
 /** Sends the "enter your PIN" prompt. MTN answers 202 and works async. */
 export async function requestToPay(
   config: MomoConfig,
@@ -99,12 +108,13 @@ export async function requestToPay(
       externalId: input.externalId,
       payer: { partyIdType: "MSISDN", partyId: input.payer.replace(/^\+/, "") },
       // Shown on the payer's phone and statement; MTN caps these at 160.
-      payerMessage: input.message.slice(0, 160),
-      payeeNote: input.message.slice(0, 160),
+      payerMessage: payerText(input.message),
+      payeeNote: payerText(input.message),
     }),
   })
   if (res.status === 202) return
   if (res.status === 401) resetMomoTokenCache()
+  // Anything but 202 means no prompt went out (a WAF block even answers 200).
   // 400/409 are our request (bad payer, duplicate reference); 5xx is MTN.
   throw new MomoError(res.status >= 500 || res.status === 401 ? "MOMO_UNAVAILABLE" : "MOMO_REJECTED", res.status)
 }
