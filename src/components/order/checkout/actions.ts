@@ -1,6 +1,9 @@
 "use server"
 
+import { revalidateTag } from "next/cache"
+
 import { fail, ok, type ActionResponse } from "@/lib/action-response"
+import { MENU_TAG } from "@/lib/cache-tags"
 import { db } from "@/lib/db"
 import { getMomoConfig, toMomoPayer } from "@/lib/momo/config"
 import { findOrderByKey, insertOrder, type OrderRef } from "@/lib/order/create"
@@ -72,7 +75,11 @@ export async function createOrder(input: unknown): Promise<ActionResponse<Create
 
   const isDelivery = data.fulfillment === "DELIVERY"
   const resolved = await resolveOrderLines(db, data.lines)
-  if (!resolved.ok) return fail(resolved.error, { details: { itemIds: resolved.itemIds } })
+  if (!resolved.ok) {
+    // The guest's menu was stale (cached): expire it, so the refresh shows the truth.
+    revalidateTag(MENU_TAG, { expire: 0 })
+    return fail(resolved.error, { details: { itemIds: resolved.itemIds } })
+  }
 
   const totals = computeOrderTotals(
     resolved.lines.map((l) => ({ unitPrice: l.unitPrice, quantity: l.quantity, modifierPrices: l.modifiers.map((m) => m.price) })),

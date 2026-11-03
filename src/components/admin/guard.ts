@@ -1,8 +1,9 @@
 import "server-only"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 
 import { getStaffSession, type StaffSession } from "@/lib/auth"
+import { MENU_TAG, RESTAURANT_TAG } from "@/lib/cache-tags"
 import { assertRateLimit, RateLimitError } from "@/lib/rate-limit"
 
 /** Admin action preamble: session with ADMIN role + per-user rate limit. */
@@ -18,7 +19,13 @@ export async function adminGuard(): Promise<{ session: StaffSession } | { error:
   return { session }
 }
 
-/** Menu and settings feed every customer page — refresh the whole tree. */
+/**
+ * Menu and settings feed every customer page — refresh the whole tree. The
+ * cached menu and settings expire at once ({ expire: 0 }: never served stale),
+ * so a sold-out toggle reaches the next guest, not one five minutes later.
+ */
 export function revalidateAll() {
+  revalidateTag(MENU_TAG, { expire: 0 })
+  revalidateTag(RESTAURANT_TAG, { expire: 0 })
   revalidatePath("/", "layout")
 }

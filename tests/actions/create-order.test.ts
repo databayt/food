@@ -25,6 +25,8 @@ vi.mock("@/lib/momo/config", async (importOriginal) => {
   }
 })
 
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }))
+
 vi.mock("@/components/order/payment/prompt", () => ({
   sendMomoPrompt: vi.fn(async () => ({ ok: true, attemptId: "att-1" })),
 }))
@@ -106,6 +108,7 @@ vi.mock("@/lib/db", async () => {
 
 import { createOrder } from "@/components/order/checkout/actions"
 import { sendMomoPrompt } from "@/components/order/payment/prompt"
+import { revalidateTag } from "next/cache"
 import { db } from "@/lib/db"
 import { assertRateLimit } from "@/lib/rate-limit"
 
@@ -232,6 +235,8 @@ describe("createOrder — rejections", () => {
     const res = await createOrder(input({ lines: [{ itemId: "i-soldout", optionIds: [], quantity: 1, note: "" }] }))
     expect(res).toMatchObject({ success: false, error: "ITEM_UNAVAILABLE", details: { itemIds: ["i-soldout"] } })
     expect(db.$transaction).not.toHaveBeenCalled()
+    // The guest saw a stale (cached) menu: it expires, so the refresh shows Sold out.
+    expect(revalidateTag).toHaveBeenCalledWith("menu", { expire: 0 })
   })
 
   it("rejects archived and unknown items", async () => {

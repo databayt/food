@@ -1,5 +1,7 @@
 "use server"
 
+import { revalidateTag } from "next/cache"
+
 import { toLocale } from "@/components/internationalization/config"
 import { resolveOrderLines } from "@/components/order/checkout/resolve-order"
 import { fieldErrors } from "@/components/order/checkout/validation"
@@ -7,6 +9,7 @@ import { sendMomoPrompt } from "@/components/order/payment/prompt"
 import { refreshPendingAttempts } from "@/components/order/payment/settle"
 import { fail, ok, type ActionResponse } from "@/lib/action-response"
 import { getStaffSession } from "@/lib/auth"
+import { MENU_TAG } from "@/lib/cache-tags"
 import { db } from "@/lib/db"
 import { getMomoConfig, toMomoPayer } from "@/lib/momo/config"
 import { findOrderByKey, insertOrder } from "@/lib/order/create"
@@ -70,7 +73,10 @@ export async function createPosOrder(input: unknown): Promise<ActionResponse<Pos
   if (isDelivery && !phone) return fail("VALIDATION", { errors: { phone: "PHONE_INVALID" } })
 
   const resolved = await resolveOrderLines(db, data.lines)
-  if (!resolved.ok) return fail(resolved.error, { details: { itemIds: resolved.itemIds } })
+  if (!resolved.ok) {
+    revalidateTag(MENU_TAG, { expire: 0 }) // the POS grid was stale — show the truth on refresh
+    return fail(resolved.error, { details: { itemIds: resolved.itemIds } })
+  }
   const totals = computeOrderTotals(
     resolved.lines.map((l) => ({ unitPrice: l.unitPrice, quantity: l.quantity, modifierPrices: l.modifiers.map((m) => m.price) })),
     isDelivery ? (settings?.deliveryFee ?? 0) : 0

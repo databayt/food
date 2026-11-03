@@ -1,5 +1,8 @@
 import "server-only"
 
+import { unstable_cache } from "next/cache"
+
+import { RESTAURANT_TAG } from "@/lib/cache-tags"
 import { db } from "@/lib/db"
 
 export type RestaurantSettings = {
@@ -34,8 +37,14 @@ const DEFAULTS: RestaurantSettings = {
   momoEnabled: false,
 }
 
-/** Customer-safe restaurant settings (singleton row "default"). */
-export async function getRestaurant(): Promise<RestaurantSettings> {
+/**
+ * Customer-safe restaurant settings (singleton row "default"), cached: every
+ * page reads them, and from the Workers edge each read is a round trip to
+ * Frankfurt. Display only — the order actions read the row themselves.
+ */
+export const getRestaurant = unstable_cache(loadRestaurant, ["restaurant-settings"], { tags: [RESTAURANT_TAG], revalidate: 300 })
+
+async function loadRestaurant(): Promise<RestaurantSettings> {
   const row = await db.restaurant.findUnique({ where: { id: "default" } })
   if (!row) return DEFAULTS
   return {

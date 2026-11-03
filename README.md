@@ -95,6 +95,12 @@ The production admin is `admin@charles.com`; its password is Keychain `cf-food-S
 - **Delivery**: the guest types an address and can attach a map pin ("Share my location"). The cashier card opens the pin in Google Maps, messages the customer on WhatsApp, and sends the rider one WhatsApp message with address, pin, items and the amount to collect. "Out for delivery" stamps `dispatchedAt` (the status stays READY) and the guest sees "On the way"; "Delivered" completes it.
 - **MoMo pay-then-place**: with the `MOMO_*` keys set, MoMo is the default and "Pay with MoMo" sends an MTN Request-to-Pay PIN prompt from checkout — the PIN is the guest's last step. MTN's status read-back (callback or poll) marks it paid, stores the receipt number and places the order as CONFIRMED, straight to the kitchen. A declined guest can retry, use another number or pay cash instead; an unpaid order is cancelled after 15 min. Without the keys, the guest pays to the merchant code by hand. See `src/components/order/payment/README.md`.
 - **Counter POS**: the cashier rings up a ticket in a few taps. Cash pickup is paid on the spot with change shown and goes straight to the kitchen; a delivery is collected by the rider; MoMo pushes the PIN prompt to the customer's phone and places the order once paid. Prints an 80 mm receipt. See `src/components/cashier/README.md`.
+- **Menu cache**: the menu (per locale) and the restaurant settings are cached with tags
+  (`lib/cache-tags.ts`) — the nested menu read is nine sequential queries. Every admin write
+  expires them at once (`admin/guard.ts#revalidateAll`, `revalidateTag(…, { expire: 0 })`), and an
+  order rejected because an item or option changed expires the menu too. Writes outside the admin
+  (seed scripts, SQL) show within 5 minutes. Prices and availability are always re-read from the
+  database at checkout and at the POS, never from the cache.
 - **Live updates** are a poll (5 s staff, 10 s guests) — no realtime service. Staff screens keep polling behind other tabs, chime on new orders and repeat the chime every 30 s while an order waits for confirmation.
 - **Privacy**: tracking pages use an unguessable token and never show phone or address; the kitchen query never reads them.
 
