@@ -5,6 +5,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { localeConfig } from "@/components/internationalization/config"
 import { interpolate } from "@/components/internationalization/interpolate"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { formatLocalPhone } from "@/lib/order/phone"
 import { TIME_ZONE } from "@/lib/site"
 
 import type { PosResult } from "./types"
@@ -12,7 +13,9 @@ import type { PosResult } from "./types"
 /**
  * 80 mm till receipt. Printed with window.print(); the print stylesheet
  * hides everything but `.pos-receipt`, so it works on any thermal printer
- * the tablet's browser can reach.
+ * the tablet's browser can reach. Transitions are off in print — shadcn
+ * buttons animate `visibility` and would otherwise print mid-fade — and the
+ * text is pure black (grey comes out faint on thermal paper).
  */
 export function Receipt({ lang, result, restaurant }: { lang: Locale; result: PosResult; restaurant: { name: string; address: string | null; phone: string | null } }) {
   const dict = useDictionary()
@@ -24,12 +27,12 @@ export function Receipt({ lang, result, restaurant }: { lang: Locale; result: Po
   return (
     <div className="pos-receipt hidden text-[12px] leading-snug text-black print:block" aria-hidden="true">
       {/* i18n-exempt — print stylesheet, not copy */}
-      <style>{`@media print { @page { size: 80mm auto; margin: 4mm } body * { visibility: hidden } .pos-receipt, .pos-receipt * { visibility: visible } .pos-receipt { position: absolute; inset: 0 auto auto 0; width: 72mm } }`}</style>
+      <style>{`@media print { @page { size: 80mm auto; margin: 4mm } * { transition: none !important; animation: none !important } body * { visibility: hidden } .pos-receipt, .pos-receipt * { visibility: visible; color: #000 !important } .pos-receipt { position: absolute; inset: 0 auto auto 0; width: 72mm } }`}</style>
       <p className="text-center text-[15px] font-bold">{restaurant.name}</p>
       {restaurant.address && <p className="text-center">{restaurant.address}</p>}
       {restaurant.phone && (
         <p className="text-center" dir="ltr">
-          {restaurant.phone}
+          {formatLocalPhone(restaurant.phone)}
         </p>
       )}
       <p className="mt-2 flex justify-between border-t border-dashed border-black pt-1 font-bold">
