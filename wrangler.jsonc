@@ -13,6 +13,9 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
   "observability": { "enabled": true },
+  // Run next to the database (Neon, Frankfurt) instead of the visitor's edge (Johannesburg for
+  // Kigali): the menu makes several sequential queries, each one a JNB↔FRA round trip. Same as mkan.
+  "placement": { "mode": "smart" },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

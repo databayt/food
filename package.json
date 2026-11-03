@@ -30,6 +30,7 @@
     "postinstall": "prisma generate",
     "check:rate-limit": "tsx --conditions=react-server scripts/check-rate-limit.ts",
     "momo:smoke": "tsx --conditions=react-server scripts/momo-smoke.ts",
+    "smoke:prod": "node scripts/prod-smoke.mjs",
     "items:photos": "tsx scripts/process-item-photos.ts",
     "items:attach": "tsx scripts/set-item-photos.ts"
   },

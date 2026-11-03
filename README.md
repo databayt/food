@@ -72,6 +72,16 @@ curl -s https://bu.databayt.org/api/health  # uptime resets when the new version
 
 `CF_WORKER_NAME=food-next` deploys a trial Worker (no route) for verification; roll back with `wrangler rollback`.
 
+The Worker uses Smart Placement (`wrangler.jsonc`): it runs next to the Neon database in
+Frankfurt rather than at the visitor's edge, so the menu's sequential queries stay local.
+
+**Watching production.** `.github/workflows/prod-smoke.yml` runs `pnpm smoke:prod` every hour:
+health, the menu in en/rw/ar, checkout, the cart redirect, the safe login form, a real tracking
+page, and — signed in as the admin (repo secrets `SMOKE_*`) — the cashier queue, POS, kitchen and
+every admin editor. A server error anywhere fails it; kun's job supervisor re-runs it once, then
+opens a `job-health` issue. **Backups:** Neon point-in-time restore covers 6 h; a daily snapshot
+(23:00 UTC, kept 14 days) covers the rest — restore one with Neon `restore_snapshot`.
+
 Schema changes: `DATABASE_URL=$DIRECT DIRECT_URL=$DIRECT pnpm exec prisma migrate deploy` against
 `main` **before** deploying code that needs them (take a Neon restore-point branch first).
 The production admin is `admin@charles.com`; its password is Keychain `cf-food-SEED_ADMIN_PASSWORD`.

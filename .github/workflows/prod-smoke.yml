@@ -1,0 +1,35 @@
+# Hourly check of production as guests, the cashier and the owner use it
+# (scripts/prod-smoke.mjs). Watched by kun's job supervisor (engine.json →
+# jobs.$cloud.gh): a failed run is re-run once, then a job-health issue opens.
+name: prod-smoke
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prod-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/prod-smoke.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Smoke-check https://bu.databayt.org
+        run: node scripts/prod-smoke.mjs https://bu.databayt.org
+        env:
+          SMOKE_TRACK_TOKEN: ${{ secrets.SMOKE_TRACK_TOKEN }}
+          SMOKE_STAFF_EMAIL: ${{ secrets.SMOKE_STAFF_EMAIL }}
+          SMOKE_STAFF_PASSWORD: ${{ secrets.SMOKE_STAFF_PASSWORD }}
