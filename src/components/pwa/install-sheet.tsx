@@ -96,11 +96,9 @@ export function InstallSheet() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     if (!detected) return;
-    if (countVisit() >= 2) {
-      setReady(true);
-      return;
-    }
-    const t = setTimeout(() => setReady(true), FIRST_VISIT_DELAY_MS);
+    // A return visit shows it on the next tick; a first visit after the delay.
+    const delay = countVisit() >= 2 ? 0 : FIRST_VISIT_DELAY_MS;
+    const t = setTimeout(() => setReady(true), delay);
     return () => clearTimeout(t);
   }, [detected]);
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
