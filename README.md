@@ -74,7 +74,7 @@ curl -s https://bu.databayt.org/api/health  # uptime resets when the new version
 
 Schema changes: `DATABASE_URL=$DIRECT DIRECT_URL=$DIRECT pnpm exec prisma migrate deploy` against
 `main` **before** deploying code that needs them (take a Neon restore-point branch first).
-The production admin is `admin@charlesburgers.rw`; its password is Keychain `cf-food-SEED_ADMIN_PASSWORD`.
+The production admin is `admin@charles.com`; its password is Keychain `cf-food-SEED_ADMIN_PASSWORD`.
 
 ## Design notes
 
@@ -95,8 +95,8 @@ review of Kinyarwanda and Arabic UI copy (`docs/translation-review.md`).
 
 Before taking real orders (all in Admin, no code):
 
-- **Staff accounts** — done 2026-11-03: `cashier@charlesburgers.rw` and
-  `kitchen@charlesburgers.rw`, passwords in Keychain `cf-food-CASHIER_PASSWORD` /
+- **Staff accounts** — done 2026-11-03: `cashier@charles.com` and
+  `kitchen@charles.com` (admin: `admin@charles.com`), passwords in Keychain `cf-food-CASHIER_PASSWORD` /
   `cf-food-KITCHEN_PASSWORD` (`security find-generic-password -s cf-food-CASHIER_PASSWORD -w`).
   More staff, password resets and deactivation: Admin → Staff. A NEW (cash) order waits for a
   cashier or admin to confirm it before the kitchen sees it; paid orders go straight there.
