@@ -59,6 +59,10 @@ const nextConfig: NextConfig = {
         },
       }
     : {}),
+  // The cart lives on checkout now; old links and bookmarks get a real redirect.
+  async redirects() {
+    return [{ source: "/:lang(en|rw|ar)/order/cart", destination: "/:lang/order/checkout", permanent: false }]
+  },
   async headers() {
     // The proxy skips /api, so API responses get their static headers here (mkan).
     return [
